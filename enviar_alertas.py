@@ -7,7 +7,7 @@ from email.utils import formataddr
 from email.header import Header
 
 # --- Configuración del Archivo de Datos ---
-DATA_FILE = "flota_data.json"
+DATA_FILE = "data/flota_data.json"
 
 # --- Funciones de Ayuda (Sin cambios) ---
 

@@ -9,7 +9,7 @@ import enviar_alertas  # Importamos el archivo enviar_alertas.py
 
 app = Flask(__name__)
 app.secret_key = 'tu_llave_secreta_aqui' 
-DATA_FILE = "flota_data.json"
+DATA_FILE = "data/flota_data.json"
 
 # ... (MANTÉN AQUÍ TODAS TUS FUNCIONES DE SIEMPRE: verificar_fecha, verificar_service, etc.) ...
 # ... (Copia y pega tus funciones cargar_datos, guardar_datos, buscar_camion, etc.) ...
