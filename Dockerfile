@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Exponemos el puerto 80 (el estándar web)
-EXPOSE 80
+EXPOSE 3000
 
 # Comando para iniciar la web usando Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:80", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "app:app"]
