@@ -10,7 +10,7 @@ import enviar_alertas
 app = Flask(__name__)
 app.secret_key = 'tu_llave_secreta_aqui'
 # Importante: Ruta completa para que no falle al arrancar desde otros lados
-DATA_FILE = "/opt/mi_flota_web/data/flota_data.json"
+DATA_FILE = "/data/flota_data.json"
 
 # ==========================================
 #   FUNCIONES DE AYUDA
