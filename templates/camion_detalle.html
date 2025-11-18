@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle: {{ camion.patente }}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background-color: #f9f9f9; }
+        .header { background-color: #34495e; color: white; padding: 20px; }
+        .header h1 { margin: 0; }
+        .header a { color: #ecf0f1; text-decoration: none; }
+        .container { display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; }
+        .col-main { flex: 2; min-width: 400px; }
+        .col-side { flex: 1; min-width: 300px; }
+        .card { background: #fff; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 20px; }
+        .card h2 { color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { width: 95%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-group button { padding: 10px 15px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .form-group button:hover { background-color: #2980b9; }
+        .btn-danger { background-color: #e74c3c !important; }
+        .btn-danger:hover { background-color: #c0392b !important; }
+        .btn-success { background-color: #2ecc71 !important; }
+        .btn-success:hover { background-color: #27ae60 !important; }
+        .historial-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .historial-item:last-child { border-bottom: none; }
+        .historial-item strong { color: #333; }
+        /* Clases de estado (como en V2) */
+        .estado-ok { color: #27ae60; }
+        .estado-proximo { color: #f39c12; font-weight: bold; }
+        .estado-vencido { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>{{ camion.patente }} ({{ camion.descripcion }})</h1>
+        <a href="/">&larr; Volver al Dashboard</a>
+    </div>
+
+    <div class="container">
+
+        <div class="col-main">
+
+            <div class="card">
+                <h2>Datos Centrales</h2>
+                <form action="/camion/update_core/{{ camion.id }}" method="POST">
+                    <div class="form-group">
+                        <label for="patente">Patente</label>
+                        <input type="text" id="patente" name="patente" value="{{ camion.patente }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción</label>
+                        <input type="text" id="descripcion" name="descripcion" value="{{ camion.descripcion }}" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit">Guardar Datos Centrales</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>Registrar Service Completo</h2>
+                <form action="/camion/update_service/{{ camion.id }}" method="POST">
+                    <div class="form-group">
+                        <label for="service_fecha">Fecha del Service</label>
+                        <input type="date" id="service_fecha" name="service_fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="service_km">KM al momento del Service</label>
+                        <input type="number" id="service_km" name="service_km" placeholder="Ej: {{ camion.km_actual }}" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn-success">Registrar Service</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Agregar Historial (Repuesto/Trabajo)</h2>
+                <form action="/camion/update_historial/{{ camion.id }}" method="POST">
+                    <div class="form-group">
+                        <label for="historial_fecha">Fecha</label>
+                        <input type="date" id="historial_fecha" name="historial_fecha" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="historial_tipo">Tipo</label>
+                        <select id="historial_tipo" name="historial_tipo" required>
+                            <option value="Repuesto">Repuesto</option>
+                            <option value="Trabajo">Trabajo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="historial_detalle">Detalle / Descripción</label>
+                        <textarea id="historial_detalle" name="historial_detalle" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit">Agregar al Historial</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>Zona de Peligro</h2>
+                <form action="/camion/delete/{{ camion.id }}" method="POST">
+                    <div class="form-group">
+                        <label>Eliminar este camión permanentemente.</label>
+                        <button type="submit" class="btn-danger" 
+                                onclick="return confirm('¿Está seguro que desea ELIMINAR este camión? Esta acción no se puede deshacer.')">
+                            Eliminar Camión
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-side">
+            <div class="card">
+                <h2>Estado y Vencimientos</h2>
+                <p>KM Actual: <strong>{{ camion.km_actual }} km</strong>
+                   <span class="{{ 'estado-vencido' if 'VENCIDO' in camion.estado_service else 'estado-proximo' if 'PRÓXIMO' in camion.estado_service else 'estado-ok' }}">
+                       ({{ camion.estado_service }})
+                   </span>
+                </p>
+                <form action="/camion/update_simple/{{ camion.id }}" method="POST" class="form-group">
+                    <label for="km">Actualizar Kilometraje:</label>
+                    <input type="number" id="km" name="nuevo_valor" value="{{ camion.km_actual }}" required>
+                    <button type="submit" name="accion" value="km">Actualizar KM</button>
+                </form>
+                <hr>
+                {% for venc in camion.vencimientos_con_estado %}
+                    <form action="/camion/update_simple/{{ camion.id }}" method="POST" class="form-group">
+                        <label for="{{ venc.tipo | lower }}">Vencimiento {{ venc.tipo }}:</label>
+                        <p class="{{ 'estado-vencido' if 'VENCIDO' in venc.estado else 'estado-proximo' if 'PRÓXIMO' in venc.estado else 'estado-ok' }}">
+                            {{ venc.estado }}
+                        </p>
+                        <input type="date" id="{{ venc.tipo | lower }}" name="nuevo_valor" value="{{ venc.fecha }}" required>
+                        <button type="submit" name="accion" value="{{ venc.tipo | lower }}">Actualizar {{ venc.tipo }}</button>
+                    </form>
+                {% endfor %}
+            </div>
+
+            <div class="card">
+                <h2>Historial</h2>
+                {% if not camion.historial_ordenado %}
+                    <p>(No hay registros en el historial)</p>
+                {% else %}
+                    {% for reg in camion.historial_ordenado %}
+                        <div class="historial-item">
+                            <strong>[{{ reg.fecha }}] ({{ reg.tipo }})</strong><br>
+                            {{ reg.detalle }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
