@@ -1,0 +1,82 @@
+[
+    {
+        "id": 1,
+        "patente": "AA123BC",
+        "descripcion": "Camión Scania (Rojo)",
+        "km_actual": 100000,
+        "service": {
+            "ultimo_fecha": "2025-10-15",
+            "ultimo_km": 80000,
+            "intervalo_km": 10000
+        },
+        "vencimientos": {
+            "desinfeccion": "2025-12-01",
+            "seguro": "2026-01-15",
+            "vtv": "2025-11-05"
+        },
+        "historial": [
+            {
+                "fecha": "2025-10-15",
+                "tipo": "Trabajo",
+                "detalle": "Mano de obra service 80.000km"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "patente": "AB456CD",
+        "descripcion": "Camión Volvo (Blanco)",
+        "km_actual": 51200,
+        "service": {
+            "ultimo_fecha": "2025-08-10",
+            "ultimo_km": 40000,
+            "intervalo_km": 10000
+        },
+        "vencimientos": {
+            "desinfeccion": "2026-02-10",
+            "seguro": "2025-12-01",
+            "vtv": "2026-03-20"
+        },
+        "historial": []
+    },
+    {
+        "id": 3,
+        "patente": "AC789DE",
+        "descripcion": "Camión Iveco (Azul)",
+        "km_actual": 125000,
+        "service": {
+            "ultimo_fecha": "2025-09-01",
+            "ultimo_km": 120000,
+            "intervalo_km": 15000
+        },
+        "vencimientos": {
+            "desinfeccion": "2026-01-15",
+            "seguro": "2025-11-10",
+            "vtv": "2025-11-15"
+        },
+        "historial": []
+    },
+    {
+        "id": 4,
+        "patente": "AD012EF",
+        "descripcion": "Camión Mercedes (Gris)",
+        "km_actual": 75000,
+        "service": {
+            "ultimo_fecha": "2025-07-30",
+            "ultimo_km": 75000,
+            "intervalo_km": 10000
+        },
+        "vencimientos": {
+            "desinfeccion": "2026-04-01",
+            "seguro": "2026-05-01",
+            "vtv": "2026-02-01"
+        },
+        "historial": [
+            {
+                "fecha": "2025-10-25",
+                "tipo": "Trabajo",
+                "detalle": "SERVICE CAMION "
+            }
+        ]
+    }
+]
