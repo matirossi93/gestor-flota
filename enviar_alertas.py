@@ -7,11 +7,13 @@ from email.utils import formataddr
 from email.header import Header
 
 # --- Configuración del Archivo de Datos ---
-DATA_FILE = "/datos_flota/flota.json"
+# Usamos ruta relativa para Docker
+DATA_FILE = "data/flota_data.json"
 
 # --- Funciones de Ayuda (Sin cambios) ---
 
 def verificar_fecha(fecha_str):
+    if not fecha_str: return "SIN DATOS"
     try:
         fecha_vencimiento = datetime.datetime.strptime(fecha_str, "%Y-%m-%d").date()
         hoy = datetime.date.today()
@@ -23,11 +25,11 @@ def verificar_fecha(fecha_str):
         else:
             return "OK"
     except ValueError:
-        return "ERROR (Formato de fecha incorrecto)"
+        return "ERROR"
 
 def verificar_service(camion):
     try:
-        km_actual = camion["km_actual"]
+        km_actual = camion.get("km_actual", 0)
         km_ultimo = camion["service"]["ultimo_km"]
         km_intervalo = camion["service"]["intervalo_km"]
         km_proximo_service = km_ultimo + km_intervalo
@@ -39,7 +41,7 @@ def verificar_service(camion):
         else:
             return "OK"
     except (KeyError, TypeError):
-        return "ERROR (Datos de service incompletos)"
+        return "ERROR"
 
 def cargar_datos():
     if not os.path.exists(DATA_FILE):
@@ -74,7 +76,9 @@ def generar_reporte_alertas():
         for tipo, fecha in camion.get("vencimientos", {}).items():
             estado_fecha = verificar_fecha(fecha)
             if "VENCIDO" in estado_fecha or "PRÓXIMO" in estado_fecha:
-                alertas_camion.append(f"  - {tipo.capitalize()}: {estado_fecha}")
+                # Reemplazamos guiones bajos por espacios para que se lea mejor
+                nombre_tipo = tipo.replace('_', ' ').capitalize()
+                alertas_camion.append(f"  - {nombre_tipo}: {estado_fecha}")
         
         if alertas_camion:
             alertas_generales.append(f"\nCamión: {patente} ({camion.get('descripcion', 'N/A')})")
@@ -91,16 +95,19 @@ def generar_reporte_alertas():
     
     return cuerpo_email
 
-# --- Envío de Email ---
+# --- Envío de Email (MODIFICADO PARA LISTA) ---
 
-def enviar_email(asunto, cuerpo, destinatario, config):
+def enviar_email(asunto, cuerpo, lista_destinatarios, config):
+    """Envía el email a una lista de personas."""
     try:
         msg = MIMEText(cuerpo, 'plain', 'utf-8')
         msg['Subject'] = Header(asunto, 'utf-8')
         msg['From'] = formataddr((str(Header("Gestor de Flota", 'utf-8')), config['EMAIL_REMITENTE']))
-        msg['To'] = destinatario
+        
+        # Unimos los emails con comas para que se vea bonito en el encabezado "Para:"
+        msg['To'] = ", ".join(lista_destinatarios)
 
-        print(f"Conectando a {config['SMTP_SERVER']}:{config['SMTP_PORT']}...")
+        print(f"Conectando a {config['SMTP_SERVER']}...")
         server = smtplib.SMTP(config['SMTP_SERVER'], config['SMTP_PORT'])
         server.ehlo()
         server.starttls() 
@@ -109,30 +116,36 @@ def enviar_email(asunto, cuerpo, destinatario, config):
         print(f"Iniciando sesión como {config['EMAIL_REMITENTE']}...")
         server.login(config['EMAIL_REMITENTE'], config['EMAIL_PASSWORD'])
         
-        print(f"Enviando email a {destinatario}...")
-        server.sendmail(config['EMAIL_REMITENTE'], [destinatario], msg.as_string())
+        print(f"Enviando email a: {lista_destinatarios}...")
+        # Aquí pasamos la LISTA real al servidor para que entregue a todos
+        server.sendmail(config['EMAIL_REMITENTE'], lista_destinatarios, msg.as_string())
         
         server.quit()
-        print("¡Email enviado con éxito!")
+        print("¡Emails enviados con éxito!")
         
     except Exception as e:
         print(f"\n--- ¡ERROR AL ENVIAR EL EMAIL! ---")
         print(f"Error: {e}")
 
-# --- NUEVA FUNCIÓN: Esta es la que llamará el sistema automático ---
+# --- FUNCIÓN PRINCIPAL AUTOMÁTICA ---
 
 def tarea_diaria():
     print("--- ⏰ Iniciando chequeo de alertas programado ---")
     
-    # TUS DATOS DE CONFIGURACIÓN (Ya incluidos)
+    # TUS DATOS DE CONFIGURACIÓN
     configuracion = {
         "SMTP_SERVER": "smtp.gmail.com",
         "SMTP_PORT": 587,
         "EMAIL_REMITENTE": "datos@semilleroelmanantial.com",
-        "EMAIL_PASSWORD": "juaj iqmi saey zalp"
+        # Usa tu contraseña de aplicación de 16 letras aquí:
+        "EMAIL_PASSWORD": "juaj iqmi saey zalp" 
     }
     
-    EMAIL_DESTINATARIO = "datos@semilleroelmanantial.com" 
+    # --- AQUÍ AGREGAS LOS CORREOS QUE QUIERAS ---
+    EMAILS_DESTINO = [
+        "datos@semilleroelmanantial.com",
+        "gerencia@semilleroelmanantial.com.ar"
+    ]
     
     # Generar y Enviar
     asunto_email = f"Alertas de Flota - {datetime.date.today().strftime('%d/%m/%Y')}"
@@ -142,12 +155,12 @@ def tarea_diaria():
         enviar_email(
             asunto_email, 
             cuerpo_del_reporte, 
-            EMAIL_DESTINATARIO,
+            EMAILS_DESTINO,
             configuracion
         )
     else:
         print("Todo en orden. No hay alertas para enviar hoy.")
 
-# --- Bloque Principal (Para probarlo manualmente) ---
+# --- Bloque Principal (Para probarlo manualmente en tu PC) ---
 if __name__ == "__main__":
     tarea_diaria()
