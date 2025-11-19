@@ -122,10 +122,16 @@ def get_proximo_id(lista_camiones):
 def iniciar_programador():
     try:
         scheduler = BackgroundScheduler()
-        # Ejecuta la tarea todos los días a las 8:00 AM
+        
+        # 1. Alertas Diarias (Todos los días a las 8:00 AM)
         scheduler.add_job(enviar_alertas.tarea_diaria, 'cron', hour=8, minute=0)
+        
+        # 2. Copia de Seguridad (Todos los VIERNES a las 9:00 AM)
+        # day_of_week='fri' significa Viernes (mon, tue, wed, thu, fri, sat, sun)
+        scheduler.add_job(enviar_alertas.enviar_copia_seguridad, 'cron', day_of_week='fri', hour=9, minute=0)
+        
         scheduler.start()
-        print("⏰ Programador de alertas iniciado (8:00 AM)")
+        print("⏰ Programador iniciado: Alertas (Diario 8AM) + Backup (Viernes 9AM)")
     except Exception as e:
         print(f"Error iniciando programador: {e}")
 
