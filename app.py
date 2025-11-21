@@ -2,14 +2,13 @@ import datetime
 import json
 import os
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 
 # --- IMPORTAMOS EL PROGRAMADOR Y TU SCRIPT DE ALERTAS ---
 from apscheduler.schedulers.background import BackgroundScheduler
 import enviar_alertas
 
-app = Flask(__name__)
-# CAMBIA ESTA LLAVE POR ALGO MÁS SEGURO SI QUIERES
+app = Flask(__name__, template_folder='.') # Importante: busca templates en la raíz
 app.secret_key = 'mathias123' 
 
 # Ruta del archivo de datos (Coincide con el volumen /app/data de Easypanel)
@@ -27,6 +26,9 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario_logueado' not in session:
+            # Si intenta entrar a la API sin login, error 401
+            if request.path.startswith('/api/'):
+                return jsonify({"error": "No autorizado"}), 401
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -42,7 +44,19 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             error = 'Usuario o contraseña incorrectos'
-    return render_template('login.html', error=error)
+    # Usamos un template simple de login o el que ya tenías
+    # Si no tienes login.html, avísame y te paso uno integrado
+    if os.path.exists('login.html'):
+        return render_template('login.html', error=error)
+    else:
+        return '''
+        <form method="post">
+            <p><input type=text name=username placeholder="Usuario"></p>
+            <p><input type=password name=password placeholder="Contraseña"></p>
+            <p><input type=submit value=Login></p>
+            <p style="color:red">''' + (error or '') + '''</p>
+        </form>
+        '''
 
 @app.route('/logout')
 def logout():
@@ -50,40 +64,8 @@ def logout():
     return redirect(url_for('login'))
 
 # ==========================================
-#   FUNCIONES DE AYUDA
+#   FUNCIONES DE AYUDA (BACKEND)
 # ==========================================
-
-def verificar_fecha(fecha_str):
-    if not fecha_str: return "SIN DATOS"
-    try:
-        fecha_vencimiento = datetime.datetime.strptime(fecha_str, "%Y-%m-%d").date()
-        hoy = datetime.date.today()
-        diferencia = (fecha_vencimiento - hoy).days
-        if diferencia < 0:
-            return f"VENCIDO (hace {-diferencia} días)"
-        elif diferencia <= 30:
-            return f"PRÓXIMO (vence en {diferencia} días)"
-        else:
-            return "OK"
-    except ValueError:
-        return "ERROR"
-
-def verificar_service(camion):
-    try:
-        km_actual = camion.get("km_actual", 0)
-        km_ultimo = camion["service"]["ultimo_km"]
-        km_intervalo = camion["service"]["intervalo_km"]
-        km_proximo_service = km_ultimo + km_intervalo
-        camion["km_proximo_service"] = km_proximo_service
-        diferencia_km = km_proximo_service - km_actual
-        if diferencia_km < 0:
-            return f"VENCIDO (hace {-diferencia_km} km)"
-        elif diferencia_km <= 2000:
-            return f"PRÓXIMO (faltan {diferencia_km} km)"
-        else:
-            return "OK"
-    except (KeyError, TypeError):
-        return "ERROR"
 
 def cargar_datos():
     if not os.path.exists(DATA_FILE):
@@ -97,24 +79,15 @@ def cargar_datos():
         print(f"Error al leer datos: {e}")
         return []
 
-def guardar_datos(datos):
+def guardar_datos_en_archivo(datos):
     try:
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
+        return True
     except IOError as e:
         print(f"Error crítico al guardar: {e}")
-
-def buscar_camion_por_id(lista_camiones, id_camion):
-    for camion in lista_camiones:
-        if camion["id"] == id_camion:
-            return camion
-    return None
-
-def get_proximo_id(lista_camiones):
-    if not lista_camiones: return 1
-    max_id = max(camion.get('id', 0) for camion in lista_camiones)
-    return max_id + 1
+        return False
 
 # ==========================================
 #   PROGRAMADOR AUTOMÁTICO (CRON)
@@ -127,7 +100,6 @@ def iniciar_programador():
         scheduler.add_job(enviar_alertas.tarea_diaria, 'cron', hour=8, minute=0)
         
         # 2. Copia de Seguridad (Todos los VIERNES a las 9:00 AM)
-        # day_of_week='fri' significa Viernes (mon, tue, wed, thu, fri, sat, sun)
         scheduler.add_job(enviar_alertas.enviar_copia_seguridad, 'cron', day_of_week='fri', hour=9, minute=0)
         
         scheduler.start()
@@ -139,167 +111,45 @@ def iniciar_programador():
 iniciar_programador()
 
 # ==========================================
-#   RUTAS WEB (DASHBOARD Y GESTIÓN)
+#   RUTAS PRINCIPALES (APP MODERNA)
 # ==========================================
 
 @app.route('/')
 @login_required
 def dashboard():
-    lista_camiones = cargar_datos()
-    for camion in lista_camiones:
-        camion['estado_service'] = verificar_service(camion)
-        camion['vencimientos_con_estado'] = []
-        
-        # Procesamos todos los vencimientos (incluyendo el nuevo Comanry)
-        for tipo, fecha in camion.get("vencimientos", {}).items():
-            estado_fecha = verificar_fecha(fecha)
-            # 'replace' sirve para quitar guiones bajos (filtro_comanry -> filtro comanry)
-            camion['vencimientos_con_estado'].append({
-                "tipo": tipo.replace('_', ' '), 
-                "fecha": fecha,
-                "estado": estado_fecha
-            })
-    return render_template('index.html', lista_de_camiones=lista_camiones)
+    # Sirve el nuevo index.html (React-style)
+    # Asegúrate de que el archivo se llame 'index.html' y esté en la misma carpeta
+    return send_from_directory('.', 'index.html')
 
-@app.route('/camion/<int:camion_id>')
+# ==========================================
+#   API JSON (CONEXIÓN CON EL NUEVO DISEÑO)
+# ==========================================
+
+@app.route('/api/flota', methods=['GET'])
 @login_required
-def detalle_camion(camion_id):
-    lista_camiones = cargar_datos()
-    camion = buscar_camion_por_id(lista_camiones, camion_id)
-    if not camion: return "No encontrado", 404
-        
-    camion['estado_service'] = verificar_service(camion)
-    camion['vencimientos_con_estado'] = []
-    for tipo, fecha in camion.get("vencimientos", {}).items():
-        estado_fecha = verificar_fecha(fecha)
-        camion['vencimientos_con_estado'].append({
-            "tipo": tipo, 
-            "fecha": fecha,
-            "estado": estado_fecha
-        })
+def api_get_flota():
+    """Devuelve el JSON crudo para que el JS lo procese"""
+    datos = cargar_datos()
+    return jsonify(datos)
+
+@app.route('/api/guardar_flota', methods=['POST'])
+@login_required
+def api_save_flota():
+    """Recibe el JSON completo modificado por el JS y lo guarda"""
+    nuevos_datos = request.json
+    if not isinstance(nuevos_datos, list):
+        return jsonify({"status": "error", "message": "Formato de datos incorrecto"}), 400
     
-    camion['historial_ordenado'] = sorted(camion.get("historial", []), key=lambda x: x['fecha'], reverse=True)
-    return render_template('camion_detalle.html', camion=camion)
+    if guardar_datos_en_archivo(nuevos_datos):
+        return jsonify({"status": "success", "message": "Guardado correctamente"})
+    else:
+        return jsonify({"status": "error", "message": "Error de escritura en servidor"}), 500
 
-@app.route('/camion/nuevo', methods=['GET', 'POST'])
+# Configuración para servir archivos estáticos si hiciera falta (imágenes, etc)
+@app.route('/<path:path>')
 @login_required
-def agregar_camion():
-    if request.method == 'POST':
-        lista_camiones = cargar_datos()
-        try:
-            nuevo_camion = {
-                "id": get_proximo_id(lista_camiones),
-                "patente": request.form['patente'].upper(),
-                "descripcion": request.form['descripcion'],
-                "km_actual": int(request.form['km_actual']),
-                "service": {
-                    "ultimo_fecha": request.form['service_fecha'],
-                    "ultimo_km": int(request.form['service_km']),
-                    "intervalo_km": int(request.form['service_intervalo'])
-                },
-                "vencimientos": {
-                    "desinfeccion": request.form['venc_desinfeccion'],
-                    "seguro": request.form['venc_seguro'],
-                    "vtv": request.form['venc_vtv'],
-                    "filtro_comanry": request.form['venc_comanry'] # NUEVO CAMPO
-                },
-                "historial": []
-            }
-            lista_camiones.append(nuevo_camion)
-            guardar_datos(lista_camiones)
-            return redirect(url_for('dashboard'))
-        except Exception as e:
-            return f"Error: {e}", 400
-    return render_template('camion_nuevo.html')
-
-@app.route('/camion/update_simple/<int:camion_id>', methods=['POST'])
-@login_required
-def actualizar_camion_simple(camion_id):
-    lista_camiones = cargar_datos()
-    camion = buscar_camion_por_id(lista_camiones, camion_id)
-    if not camion: return "No encontrado", 404
-
-    accion = request.form['accion']
-    nuevo_valor = request.form['nuevo_valor']
-
-    # Lógica para actualizar KM o Vencimientos
-    if accion == 'km':
-        camion['km_actual'] = int(nuevo_valor)
-    elif accion in camion.get('vencimientos', {}).keys() or accion == 'filtro_comanry':
-        # Si la clave no existe (camiones viejos), la crea
-        if 'vencimientos' not in camion: camion['vencimientos'] = {}
-        camion['vencimientos'][accion] = nuevo_valor
-
-    guardar_datos(lista_camiones)
-    return redirect(url_for('detalle_camion', camion_id=camion_id))
-
-@app.route('/camion/update_core/<int:camion_id>', methods=['POST'])
-@login_required
-def actualizar_camion_core(camion_id):
-    lista_camiones = cargar_datos()
-    camion = buscar_camion_por_id(lista_camiones, camion_id)
-    if not camion: return "Error", 404
-    
-    camion['patente'] = request.form['patente'].upper()
-    camion['descripcion'] = request.form['descripcion']
-    
-    guardar_datos(lista_camiones)
-    return redirect(url_for('detalle_camion', camion_id=camion_id))
-
-@app.route('/camion/update_service/<int:camion_id>', methods=['POST'])
-@login_required
-def registrar_service_completo(camion_id):
-    lista_camiones = cargar_datos()
-    camion = buscar_camion_por_id(lista_camiones, camion_id)
-    if not camion: return "Error", 404
-
-    try:
-        fecha = request.form['service_fecha']
-        km = int(request.form['service_km'])
-        
-        # Actualizamos KM actual solo si el nuevo es mayor
-        if km > camion.get('km_actual', 0):
-             camion['km_actual'] = km
-        
-        camion['service']['ultimo_fecha'] = fecha
-        camion['service']['ultimo_km'] = km
-        
-        nuevo_historial = {
-            "fecha": fecha, 
-            "tipo": "Trabajo", 
-            "detalle": f"Service completo realizado a los {km} km."
-        }
-        camion['historial'].append(nuevo_historial)
-
-    except (ValueError, TypeError):
-        return "Error: Datos inválidos.", 400
-        
-    guardar_datos(lista_camiones)
-    return redirect(url_for('detalle_camion', camion_id=camion_id))
-
-@app.route('/camion/update_historial/<int:camion_id>', methods=['POST'])
-@login_required
-def agregar_historial_general(camion_id):
-    lista_camiones = cargar_datos()
-    camion = buscar_camion_por_id(lista_camiones, camion_id)
-    if not camion: return "Error", 404
-        
-    nuevo_historial = {
-        "fecha": request.form['historial_fecha'],
-        "tipo": request.form['historial_tipo'],
-        "detalle": request.form['historial_detalle']
-    }
-    camion['historial'].append(nuevo_historial)
-    guardar_datos(lista_camiones)
-    return redirect(url_for('detalle_camion', camion_id=camion_id))
-
-@app.route('/camion/delete/<int:camion_id>', methods=['POST'])
-@login_required
-def eliminar_camion(camion_id):
-    lista_camiones = cargar_datos()
-    lista_actualizada = [c for c in lista_camiones if c['id'] != camion_id]
-    guardar_datos(lista_actualizada)
-    return redirect(url_for('dashboard'))
+def serve_static(path):
+    return send_from_directory('.', path)
 
 if __name__ == '__main__':
     # Escuchar en el puerto 80 para EasyPanel
