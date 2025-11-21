@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from apscheduler.schedulers.background import BackgroundScheduler
 import enviar_alertas
 
-app = Flask(__name__, template_folder='.') # Importante: busca templates en la raíz
+app = Flask(__name__) # Importante: busca templates en la raíz
 app.secret_key = 'mathias123' 
 
 # Ruta del archivo de datos (Coincide con el volumen /app/data de Easypanel)
@@ -119,7 +119,7 @@ iniciar_programador()
 def dashboard():
     # Sirve el nuevo index.html (React-style)
     # Asegúrate de que el archivo se llame 'index.html' y esté en la misma carpeta
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
 # ==========================================
 #   API JSON (CONEXIÓN CON EL NUEVO DISEÑO)
