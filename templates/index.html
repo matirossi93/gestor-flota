@@ -2,72 +2,682 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard de Flota</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Flota - El Manantial</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            beige: '#F3EAD6',
+                            green: {
+                                dark: '#1B4D3E', // Corporate dark green
+                                light: '#4CAF50', // Vibrant green
+                                hover: '#143d30'
+                            },
+                            orange: '#F59E0B', // Accent orange
+                            cream: '#FFFDF5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        .status-ok { color: #198754; font-weight: bold; }
-        .status-warning { color: #ffc107; font-weight: bold; }
-        .status-danger { color: #dc3545; font-weight: bold; }
-        .card-camion { transition: transform 0.2s; }
-        .card-camion:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #F3EAD6;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
-<body class="bg-light">
+<body class="text-gray-800 h-screen overflow-hidden flex">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="/">🚛 Gestor Flota - El Manantial</a>
-            <div class="d-flex">
-                <a href="/camion/nuevo" class="btn btn-success me-2">+ Nuevo Camión</a>
-                <a href="/logout" class="btn btn-outline-light">Salir</a>
+    <aside class="w-64 bg-brand-green-dark text-white hidden md:flex flex-col flex-shrink-0 shadow-xl z-20">
+        <div class="pt-8 px-6 mb-8">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white rounded-full p-0.5 shadow-lg flex-shrink-0 overflow-hidden w-10 h-10 relative">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <circle cx="50" cy="50" r="50" fill="white"/>
+                        <path d="M50 50 L5 50 A 45 45 0 0 1 50 5 Z" fill="#F59E0B" />
+                        <path d="M20 18 L20 45" stroke="white" strokeWidth="2"/>
+                        <path d="M35 10 L35 48" stroke="white" strokeWidth="2"/>
+                        <path d="M10 35 L 45 35" stroke="white" strokeWidth="2"/>
+                        <path d="M15 22 L 45 22" stroke="white" strokeWidth="2"/>
+                        <path d="M50 50 L50 5 A 45 45 0 0 1 95 50 Z" fill="#1B4D3E" />
+                        <path d="M50 50 L95 50 A 45 45 0 0 1 50 95 Z" fill="#4CAF50" />
+                        <path d="M50 50 L50 95 A 45 45 0 0 1 5 50 Z" fill="#2E7D32" />
+                        <path d="M50 5 L50 95" stroke="white" strokeWidth="2"/>
+                        <path d="M5 50 L95 50" stroke="white" strokeWidth="2"/>
+                    </svg>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <p class="text-brand-orange text-[10px] uppercase tracking-widest font-bold leading-tight">Semillero</p>
+                    <h1 class="text-white text-lg font-bold leading-none tracking-tight mt-0.5">
+                        El Manantial
+                        <span class="text-[9px] font-normal opacity-70 ml-1 align-top">S.R.L</span>
+                    </h1>
+                </div>
             </div>
         </div>
-    </nav>
+        
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <button onclick="showDashboard()" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors bg-brand-green-light text-white font-semibold">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span>Dashboard</span>
+            </button>
+            
+            <button onclick="alert('Función en desarrollo: Agregar nuevo camión')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                <span>Nueva Unidad</span>
+            </button>
 
-    <div class="container">
-        <div class="row">
-            {% for camion in lista_de_camiones %}
-            <div class="col-md-6 col-lg-6 mb-4">
-                <div class="card card-camion h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">{{ camion.patente }}</h5>
-                        <span class="badge bg-secondary">ID {{ camion.id }}</span>
-                    </div>
-                    <div class="card-body">
-                        <h6 class="card-subtitle mb-3 text-muted">{{ camion.descripcion }}</h6>
-                        
-                        <div class="mb-3 p-2 bg-light rounded border">
-                            <strong>KM Actual:</strong> {{ camion.km_actual }} km
-                        </div>
+            <button class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span>Configuración</span>
+            </button>
+        </nav>
 
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>🔧 Service</span>
-                                <span class="{{ 'status-danger' if 'VENCIDO' in camion.estado_service else 'status-warning' if 'PRÓXIMO' in camion.estado_service else 'status-ok' }}">
-                                    {{ camion.estado_service }}
-                                </span>
-                            </li>
-                            
-                            {% for venc in camion.vencimientos_con_estado %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>📅 {{ venc.tipo }}</span>
-                                <span class="{{ 'status-danger' if 'VENCIDO' in venc.estado else 'status-warning' if 'PRÓXIMO' in venc.estado else 'status-ok' }}">
-                                    {{ venc.estado }}
-                                </span>
-                            </li>
-                            {% endfor %}
-                        </ul>
+        <div class="p-4 border-t border-brand-green-hover">
+            <button class="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:bg-red-900/20 rounded-lg transition-colors">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+            <p class="text-center text-xs text-gray-500 mt-4">v2.0 Connected | Admin</p>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto relative">
+        
+        <div class="md:hidden bg-brand-green-dark p-4 flex justify-between items-center shadow-md sticky top-0 z-10">
+           <span class="text-white font-bold text-lg">El Manantial</span>
+           <button class="text-white"><i data-lucide="settings" class="w-6 h-6"></i></button>
+        </div>
+
+        <div id="view-dashboard" class="p-6 md:p-10 max-w-7xl mx-auto fade-in">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-green-dark flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Total Unidades</p>
+                        <h3 id="stat-total" class="text-3xl font-bold text-gray-800">...</h3>
                     </div>
-                    <div class="card-footer bg-white border-top-0">
-                        <a href="/camion/{{ camion.id }}" class="btn btn-primary w-100">Gestionar / Detalles</a>
+                    <div class="bg-brand-beige p-3 rounded-full">
+                        <i data-lucide="truck" class="w-6 h-6 text-brand-green-dark"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-orange flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Atención Requerida</p>
+                        <h3 id="stat-attention" class="text-3xl font-bold text-gray-800">...</h3>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 text-brand-orange"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-medium">Operativos OK</p>
+                        <h3 id="stat-ok" class="text-3xl font-bold text-gray-800">...</h3>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
                     </div>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold text-brand-green-dark">Estado de Flota</h2>
+                <div class="relative w-full md:w-96">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Buscar por patente o descripción..." 
+                        class="w-full pl-10 pr-4 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-green-light focus:border-transparent"
+                        oninput="renderTruckGrid()"
+                    />
+                    <i data-lucide="search" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400"></i>
+                </div>
+            </div>
+
+            <div id="trucks-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div class="col-span-full text-center py-10">
+                    <p class="text-gray-500 animate-pulse">Cargando datos del servidor...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-detail" class="hidden p-6 md:p-10 max-w-6xl mx-auto fade-in">
+            <button 
+                onclick="showDashboard()" 
+                class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 transition-colors font-medium"
+            >
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver al Dashboard
+            </button>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                
+                <div class="lg:w-2/3 space-y-6">
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="bg-brand-cream px-6 py-4 border-b border-brand-beige">
+                            <h3 class="font-bold text-lg text-brand-green-dark flex items-center">
+                                <i data-lucide="file-text" class="w-5 h-5 mr-2"></i> Datos Principales
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <form onsubmit="handleGeneralUpdate(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Patente</label>
+                                    <input type="text" id="input-patente" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                    <input type="text" id="input-descripcion" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                                </div>
+                                <div class="md:col-span-2 text-right">
+                                    <button type="submit" class="bg-brand-green-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-green-hover flex items-center inline-flex transition-colors">
+                                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar Cambios
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border-2 border-brand-green-light/20 overflow-hidden">
+                        <div class="bg-brand-green-light text-white px-6 py-4">
+                            <h3 class="font-bold text-lg flex items-center">
+                                <i data-lucide="wrench" class="w-5 h-5 mr-2"></i> Registrar Service Completo
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <form onsubmit="handleServiceUpdate(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                                    <input type="date" id="input-service-fecha" required class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">KM del Service</label>
+                                    <input type="number" id="input-service-km" required placeholder="0" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <button type="submit" class="w-full bg-brand-green-light hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md">
+                                        Registrar Service
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="bg-brand-cream px-6 py-4 border-b border-brand-beige">
+                            <h3 class="font-bold text-lg text-brand-green-dark">Historial Reciente</h3>
+                        </div>
+                        <div class="p-0">
+                            <ul id="history-list" class="divide-y divide-gray-100">
+                                </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/3 space-y-6">
+                    
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200">
+                        <div class="bg-brand-green-dark text-white px-6 py-4 rounded-t-xl">
+                            <h3 class="font-bold">Estado Actual</h3>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            
+                            <div class="space-y-2">
+                                <label class="flex justify-between text-sm font-medium text-gray-700">
+                                    <span>Kilometraje</span>
+                                    <span id="status-km-label" class="font-bold"></span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="input-km-actual" class="flex-1 px-3 py-1 bg-white text-gray-900 border border-gray-300 rounded text-sm focus:outline-none focus:border-brand-green-light" />
+                                    <button onclick="handleGeneralUpdate(event)" class="bg-gray-100 hover:bg-gray-200 border border-gray-200 px-3 rounded text-gray-600 transition-colors">
+                                        <i data-lucide="save" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-100" />
+
+                            <div id="vencimientos-container" class="space-y-4">
+                                </div>
+
+                            <div id="add-filter-btn" class="mt-4 pt-4 border-t border-gray-100 hidden">
+                                <button onclick="addFilterComanry()" class="text-xs text-brand-orange hover:underline font-bold flex items-center">
+                                    <span class="text-lg mr-1">+</span> Agregar Filtro Comanry
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-red-200 bg-red-50 rounded-xl p-4 flex justify-between items-center">
+                        <span class="text-red-800 text-sm font-medium">Eliminar Unidad</span>
+                        <button onclick="alert('Esta función requiere configuración del servidor')" class="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm transition-colors flex items-center">
+                            <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Eliminar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- DATA MANAGEMENT ---
+        
+        // Variable global vacía, se llenará con los datos del servidor
+        let FLOTA_DATA = []; 
+
+        // URL de tu API en Python (Asegurate de que en app.py exista esta ruta)
+        const API_URL = '/api/flota'; 
+        // Si tu ruta es diferente, cámbiala arriba. Ej: '/get_datos'
+
+        async function cargarDatosDelServidor() {
+            try {
+                console.log("Intentando conectar con:", API_URL);
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+
+                const data = await response.json();
+                FLOTA_DATA = data;
+                
+                console.log("Datos cargados:", FLOTA_DATA.length, "camiones");
+                renderDashboard(); // Renderizar una vez que tenemos datos
+
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+                document.getElementById('trucks-grid').innerHTML = `
+                    <div class="col-span-full text-center py-10 bg-red-50 rounded-lg border border-red-200">
+                        <p class="text-red-600 font-bold">Error de conexión</p>
+                        <p class="text-sm text-red-500 mt-1">No se pudo conectar con ${API_URL}</p>
+                        <p class="text-xs text-gray-500 mt-2">Revisa que app.py esté corriendo.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function guardarEnServidor() {
+            // Esta función envía TODO el array FLOTA_DATA actualizado al servidor
+            // Tu app.py debe tener una ruta POST que acepte JSON y sobrescriba el archivo
+            try {
+                const response = await fetch('/api/guardar_flota', { // Asegurate de tener esta ruta
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(FLOTA_DATA),
+                });
+
+                if (!response.ok) throw new Error('Error al guardar');
+                
+                // Feedback visual positivo (opcional)
+                console.log("Guardado exitoso en servidor");
+
+            } catch (error) {
+                console.error("Error guardando:", error);
+                alert("Hubo un error al guardar en el servidor. Revisa la consola.");
+            }
+        }
+
+        let selectedTruckId = null;
+
+        // --- HELPER FUNCTIONS ---
+
+        const formatNumber = (num) => new Intl.NumberFormat('es-AR').format(num);
+
+        const verificarFecha = (fechaStr) => {
+            if (!fechaStr) return { status: 'ERROR', message: 'SIN DATOS' };
+            const fechaVencimiento = new Date(fechaStr);
+            const hoy = new Date();
+            fechaVencimiento.setHours(0, 0, 0, 0);
+            hoy.setHours(0, 0, 0, 0);
+            const diffTime = fechaVencimiento.getTime() - hoy.getTime();
+            const diferenciaDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diferenciaDias < 0) {
+                return { status: 'DANGER', message: `VENCIDO (hace ${Math.abs(diferenciaDias)} días)` };
+            } else if (diferenciaDias <= 30) {
+                return { status: 'WARNING', message: `PRÓXIMO (vence en ${diferenciaDias} días)` };
+            } else {
+                return { status: 'OK', message: 'OK' };
+            }
+        };
+
+        const verificarService = (camion) => {
+            try {
+                const kmActual = camion.km_actual || 0;
+                const kmUltimo = camion.service.ultimo_km;
+                const kmIntervalo = camion.service.intervalo_km;
+                const kmProximoService = kmUltimo + kmIntervalo;
+                const diferenciaKm = kmProximoService - kmActual;
+
+                if (diferenciaKm < 0) {
+                    return { status: 'DANGER', message: `VENCIDO (hace ${Math.abs(diferenciaKm)} km)` };
+                } else if (diferenciaKm <= 2000) {
+                    return { status: 'WARNING', message: `PRÓXIMO (faltan ${diferenciaKm} km)` };
+                } else {
+                    return { status: 'OK', message: 'OK' };
+                }
+            } catch (e) {
+                return { status: 'ERROR', message: 'ERROR' };
+            }
+        };
+
+        const getBadgeStyles = (status) => {
+            switch (status) {
+                case 'OK': return 'bg-green-100 text-green-800 border-green-200';
+                case 'WARNING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                case 'DANGER': return 'bg-red-100 text-red-800 border-red-200';
+                default: return 'bg-gray-100 text-gray-800 border-gray-200';
+            }
+        };
+
+        const getTextClass = (status) => {
+             switch (status) {
+                case 'OK': return 'text-green-600';
+                case 'WARNING': return 'text-yellow-600 font-bold';
+                case 'DANGER': return 'text-red-600 font-bold';
+                default: return 'text-gray-600';
+            }
+        }
+
+        // --- APP LOGIC ---
+
+        function initApp() {
+            lucide.createIcons();
+            cargarDatosDelServidor(); // <--- Aquí inicia la carga real
+        }
+
+        function renderDashboard() {
+            if (FLOTA_DATA.length === 0) {
+                document.getElementById('trucks-grid').innerHTML = '<div class="col-span-full text-center text-gray-500">No hay camiones registrados.</div>';
+                return;
+            }
+
+            // Update stats
+            const total = FLOTA_DATA.length;
+            const attention = FLOTA_DATA.filter(c => {
+                if (verificarService(c).status !== 'OK') return true;
+                for (let key in c.vencimientos) {
+                    if (verificarFecha(c.vencimientos[key]).status !== 'OK') return true;
+                }
+                return false;
+            }).length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-attention').innerText = attention;
+            document.getElementById('stat-ok').innerText = total - attention;
+
+            renderTruckGrid();
+        }
+
+        function renderTruckGrid() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const grid = document.getElementById('trucks-grid');
+            grid.innerHTML = '';
+
+            const filtered = FLOTA_DATA.filter(c => 
+                c.patente.toLowerCase().includes(searchTerm) || 
+                c.descripcion.toLowerCase().includes(searchTerm)
+            );
+
+            filtered.forEach(camion => {
+                const serviceSt = verificarService(camion);
+                const card = document.createElement('div');
+                card.className = "bg-brand-cream rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden group";
+                card.onclick = () => showDetail(camion.id);
+
+                // Vencimientos Logic HTML
+                let vencimientosHTML = '';
+                Object.entries(camion.vencimientos).forEach(([key, value]) => {
+                    if (!value) return;
+                    const st = verificarFecha(value);
+                    const label = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const textClass = st.status === 'DANGER' ? 'text-red-600 font-bold' : st.status === 'WARNING' ? 'text-yellow-600 font-bold' : 'text-green-600';
+                    const statusMsg = st.status === 'OK' ? 'OK' : st.message.split('(')[0];
+
+                    vencimientosHTML += `
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600 capitalize">${label}</span>
+                            <span class="${textClass}">${statusMsg}</span>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="bg-white p-4 border-b border-gray-100 flex justify-between items-center group-hover:bg-brand-beige transition-colors">
+                        <div>
+                            <h3 class="text-xl font-bold text-brand-green-dark">${camion.patente}</h3>
+                            <p class="text-sm text-gray-500 truncate max-w-[200px]">${camion.descripcion}</p>
+                        </div>
+                        <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-mono">ID: ${camion.id}</span>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+                                <span class="text-sm font-medium text-gray-700">Kilometraje</span>
+                            </div>
+                            <span class="font-mono font-bold text-gray-800">${formatNumber(camion.km_actual)} km</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 rounded-full ${serviceSt.status === 'OK' ? 'bg-green-500' : serviceSt.status === 'DANGER' ? 'bg-red-500' : 'bg-yellow-500'}"></div>
+                                <span class="text-sm font-medium text-gray-700">Service</span>
+                            </div>
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold border ${getBadgeStyles(serviceSt.status)}">${serviceSt.message}</span>
+                        </div>
+                        <div class="h-px bg-gray-200 my-2"></div>
+                        <div class="space-y-2">
+                            ${vencimientosHTML}
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-3 text-center border-t border-gray-100">
+                        <span class="text-brand-green-light font-medium text-sm group-hover:text-brand-green-dark transition-colors">Ver Detalles &rarr;</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- NAVIGATION ---
+
+        function showDashboard() {
+            document.getElementById('view-dashboard').classList.remove('hidden');
+            document.getElementById('view-detail').classList.add('hidden');
+            document.getElementById('nav-dashboard').classList.add('bg-brand-green-light', 'text-white');
+            document.getElementById('nav-dashboard').classList.remove('text-gray-300', 'hover:bg-brand-green-hover');
+            selectedTruckId = null;
+            renderDashboard(); // Re-render to catch updates
+        }
+
+        function showDetail(id) {
+            selectedTruckId = id;
+            const camion = FLOTA_DATA.find(c => c.id === id);
+            if(!camion) return;
+
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-detail').classList.remove('hidden');
+            document.getElementById('nav-dashboard').classList.remove('bg-brand-green-light', 'text-white');
+            document.getElementById('nav-dashboard').classList.add('text-gray-300', 'hover:bg-brand-green-hover');
+
+            // Populate Inputs
+            document.getElementById('input-patente').value = camion.patente;
+            document.getElementById('input-descripcion').value = camion.descripcion;
+            document.getElementById('input-service-km').placeholder = `Actual: ${camion.km_actual}`;
+            document.getElementById('input-service-km').value = '';
+            document.getElementById('input-service-fecha').value = '';
+            
+            document.getElementById('input-km-actual').value = camion.km_actual;
+
+            // Render History
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            if(camion.historial.length === 0) {
+                historyList.innerHTML = '<p class="p-6 text-gray-500 italic">No hay historial registrado.</p>';
+            } else {
+                camion.historial.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = "p-4 hover:bg-gray-50";
+                    li.innerHTML = `
+                        <div class="flex justify-between mb-1">
+                            <span class="text-xs font-bold text-brand-green-dark uppercase tracking-wide">${item.tipo}</span>
+                            <span class="text-xs text-gray-500">${item.fecha}</span>
+                        </div>
+                        <p class="text-gray-800 text-sm">${item.detalle}</p>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+
+            // Render Status Side Panel
+            const serviceSt = verificarService(camion);
+            const statusLabel = document.getElementById('status-km-label');
+            statusLabel.innerText = serviceSt.message;
+            statusLabel.className = `font-bold ${getTextClass(serviceSt.status)}`;
+
+            const vencContainer = document.getElementById('vencimientos-container');
+            vencContainer.innerHTML = '';
+            
+            // Dynamic Vencimientos Inputs
+            Object.entries(camion.vencimientos).forEach(([key, value]) => {
+                if(!key) return;
+                const st = verificarFecha(value);
+                const label = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                const div = document.createElement('div');
+                div.className = "space-y-1";
+                div.innerHTML = `
+                    <label class="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wide">
+                        <span>${label}</span>
+                        <span class="${getTextClass(st.status)}">${st.message}</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="date" id="venc-${key}" value="${value}" class="flex-1 px-3 py-1 bg-white text-gray-900 border border-gray-300 rounded text-sm focus:outline-none focus:border-brand-green-light" />
+                        <button onclick="handleGeneralUpdate(event)" class="bg-gray-100 hover:bg-gray-200 border border-gray-200 px-3 rounded text-gray-600 transition-colors">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                vencContainer.appendChild(div);
+            });
+
+            // Show/Hide Add Comanry
+            const btnComanry = document.getElementById('add-filter-btn');
+            if(!camion.vencimientos.filtro_comanry) {
+                btnComanry.classList.remove('hidden');
+            } else {
+                btnComanry.classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- FORM HANDLERS ---
+
+        async function handleGeneralUpdate(e) {
+            e.preventDefault();
+            if(!selectedTruckId) return;
+            
+            const camion = FLOTA_DATA.find(c => c.id === selectedTruckId);
+            
+            // Update Core
+            camion.patente = document.getElementById('input-patente').value;
+            camion.descripcion = document.getElementById('input-descripcion').value;
+            
+            // Update KM
+            const newKm = parseInt(document.getElementById('input-km-actual').value);
+            if(!isNaN(newKm)) camion.km_actual = newKm;
+
+            // Update Vencimientos
+            const vencInputs = document.querySelectorAll('[id^="venc-"]');
+            vencInputs.forEach(input => {
+                const key = input.id.replace('venc-', '');
+                camion.vencimientos[key] = input.value;
+            });
+
+            // Envío al servidor
+            await guardarEnServidor();
+            
+            alert("Cambios guardados.");
+            showDetail(selectedTruckId); // Refresh view
+        }
+
+        async function handleServiceUpdate(e) {
+            e.preventDefault();
+            if(!selectedTruckId) return;
+
+            const camion = FLOTA_DATA.find(c => c.id === selectedTruckId);
+            const fecha = document.getElementById('input-service-fecha').value;
+            const km = parseInt(document.getElementById('input-service-km').value);
+
+            if(fecha && km) {
+                // Logic
+                if(km > camion.km_actual) camion.km_actual = km;
+                camion.service.ultimo_fecha = fecha;
+                camion.service.ultimo_km = km;
+                
+                camion.historial.unshift({
+                    fecha: fecha,
+                    tipo: 'Trabajo',
+                    detalle: `Service completo realizado a los ${formatNumber(km)} km.`
+                });
+
+                // Envío al servidor
+                await guardarEnServidor();
+
+                alert("Service registrado correctamente.");
+                showDetail(selectedTruckId);
+            }
+        }
+
+        async function addFilterComanry() {
+            if(!selectedTruckId) return;
+            const camion = FLOTA_DATA.find(c => c.id === selectedTruckId);
+            camion.vencimientos['filtro_comanry'] = new Date().toISOString().split('T')[0];
+            
+            // Envío al servidor
+            await guardarEnServidor();
+            
+            showDetail(selectedTruckId);
+        }
+
+        // Init
+        window.onload = initApp;
+
+    </script>
 </body>
 </html>
