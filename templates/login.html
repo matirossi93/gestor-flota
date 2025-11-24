@@ -1,35 +1,140 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Acceso - Gestor Flota</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - El Manantial</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Configuración de Marca -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            beige: '#F3EAD6',
+                            green: {
+                                dark: '#1B4D3E',
+                                light: '#4CAF50',
+                                hover: '#143d30'
+                            },
+                            orange: '#F59E0B',
+                            cream: '#FFFDF5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .card { width: 100%; max-width: 400px; shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1B4D3E; /* Fondo Verde Oscuro */
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body>
-    <div class="card">
-        <div class="card-header bg-primary text-white text-center">
-            <h3>🚛 El Manantial</h3>
+<body class="h-screen w-full flex items-center justify-center p-4">
+
+    <div class="bg-white/10 backdrop-blur-md p-8 md:p-12 rounded-2xl shadow-2xl w-full max-w-md border border-white/20 fade-in">
+        
+        <!-- Logo Section -->
+        <div class="flex justify-center mb-10 flex-col items-center">
+            <div class="bg-white rounded-full p-1 shadow-lg w-32 h-32 flex items-center justify-center border-2 border-green-500/20 overflow-hidden mb-4">
+                <!-- LOGO STATIC -->
+                <img src="/static/logo.png" alt="Semillero El Manantial" class="w-full h-full object-cover rounded-full">
+            </div>
+            <div class="text-center">
+                <p class="text-brand-orange text-[10px] uppercase tracking-widest font-bold leading-tight">Semillero</p>
+                <h1 class="text-white font-bold text-3xl leading-none tracking-tight mt-1">
+                    El Manantial
+                    <span class="text-[10px] font-normal opacity-70 ml-1 align-top">S.R.L</span>
+                </h1>
+            </div>
         </div>
-        <div class="card-body p-4">
-            {% if error %}
-                <div class="alert alert-danger">{{ error }}</div>
-            {% endif %}
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Usuario</label>
-                    <input type="text" name="username" class="form-control" required autofocus>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-white/80 text-sm font-medium mb-2">Usuario</label>
+                <div class="relative">
+                    <i data-lucide="user" class="absolute left-3 top-3 w-5 h-5 text-gray-400"></i>
+                    <input 
+                        type="text" 
+                        id="username"
+                        class="w-full pl-10 pr-4 py-3 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-900 placeholder-gray-400"
+                        placeholder="admin"
+                    />
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="password" class="form-control" required>
+            </div>
+            <div>
+                <label class="block text-white/80 text-sm font-medium mb-2">Contraseña</label>
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-3 top-3 w-5 h-5 text-gray-400"></i>
+                    <input 
+                        type="password" 
+                        id="password"
+                        class="w-full pl-10 pr-4 py-3 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange text-gray-900 placeholder-gray-400"
+                        placeholder="•••••"
+                    />
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-            </form>
-        </div>
+            </div>
+            
+            <div id="errorMsg" class="hidden text-red-300 text-sm text-center font-bold bg-red-900/20 py-2 rounded">
+                Credenciales incorrectas
+            </div>
+
+            <button type="submit" class="w-full bg-brand-orange hover:bg-yellow-500 text-brand-green-dark font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg mt-4">
+                INGRESAR AL SISTEMA
+            </button>
+        </form>
+        
+        <p class="text-center text-white/40 text-xs mt-8">v2.1 Connected | Secure Access</p>
     </div>
+
+    <script>
+        // Inicializar Iconos
+        lucide.createIcons();
+
+        // Lógica simple de Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            // Validación básica (esto debería conectarse a tu backend real si es necesario)
+            if (user === 'admin' && pass === 'admin') {
+                // Redirigir al Dashboard (index.html o ruta raíz '/')
+                window.location.href = '/'; 
+            } else {
+                errorMsg.classList.remove('hidden');
+                // Animación de error
+                const card = document.querySelector('.backdrop-blur-md');
+                card.classList.add('animate-pulse');
+                setTimeout(() => card.classList.remove('animate-pulse'), 500);
+            }
+        });
+    </script>
 </body>
 </html>
