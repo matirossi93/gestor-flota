@@ -12,7 +12,8 @@
         "vencimientos": {
             "desinfeccion": "2025-12-01",
             "seguro": "2026-01-15",
-            "vtv": "2025-11-05"
+            "vtv": "2025-11-05",
+            "filtro_comanry": ""
         },
         "historial": [
             {
@@ -35,7 +36,8 @@
         "vencimientos": {
             "desinfeccion": "2026-02-10",
             "seguro": "2025-12-01",
-            "vtv": "2026-03-20"
+            "vtv": "2026-03-20",
+            "filtro_comanry": ""
         },
         "historial": []
     },
@@ -52,7 +54,8 @@
         "vencimientos": {
             "desinfeccion": "2026-01-15",
             "seguro": "2025-11-10",
-            "vtv": "2025-11-15"
+            "vtv": "2025-11-15",
+            "filtro_comanry": ""
         },
         "historial": []
     },
@@ -69,14 +72,13 @@
         "vencimientos": {
             "desinfeccion": "2026-04-01",
             "seguro": "2026-05-01",
-            "vtv": "2026-02-01"
+            "vtv": "2026-02-01",
+            "filtro_comanry": ""
         },
         "historial": [
             {
                 "fecha": "2025-10-25",
                 "tipo": "Trabajo",
-                "detalle": "SERVICE CAMION "
+                "detalle": "SERVICE CAMION"
             }
         ]
-    }
-]
