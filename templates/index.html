@@ -280,11 +280,21 @@
             grid.innerHTML = '';
             const term = document.getElementById('search-input').value.toLowerCase();
             
+            // --- LOGICA CORREGIDA DE CONTADORES ---
             let att = 0;
             FLOTA_DATA.forEach(c => {
-                if(checkService(c).st !== 'OK') att++;
-                else if(Object.values(c.vencimientos).some(v => v && checkDate(v).st !== 'OK')) att++;
+                // 1. Chequeamos si el service está ROJO (Vencido)
+                const serviceRed = checkService(c).st === 'DANGER';
+                
+                // 2. Chequeamos si algún vencimiento está ROJO (Vencido)
+                const docRed = Object.values(c.vencimientos).some(v => v && checkDate(v).st === 'DANGER');
+
+                // Solo pedimos atención si hay algo ROJO. Lo Amarillo cuenta como Operativo.
+                if (serviceRed || docRed) {
+                    att++;
+                }
             });
+            // --------------------------------------
             document.getElementById('stat-total').innerText = FLOTA_DATA.length;
             document.getElementById('stat-attention').innerText = att;
             document.getElementById('stat-ok').innerText = FLOTA_DATA.length - att;
