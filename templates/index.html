@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,12 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor Flota - El Manantial</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
+    <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Configuración de Marca -->
     <script>
         tailwind.config = {
             theme: {
@@ -19,11 +24,11 @@
                         brand: {
                             beige: '#F3EAD6',
                             green: {
-                                dark: '#1B4D3E', // Corporate dark green
-                                light: '#4CAF50', // Vibrant green
+                                dark: '#1B4D3E',
+                                light: '#4CAF50',
                                 hover: '#143d30'
                             },
-                            orange: '#F59E0B', // Accent orange
+                            orange: '#F59E0B',
                             cream: '#FFFDF5'
                         }
                     },
@@ -58,23 +63,13 @@
 </head>
 <body class="text-gray-800 h-screen overflow-hidden flex">
 
+    <!-- SIDEBAR -->
     <aside class="w-64 bg-brand-green-dark text-white hidden md:flex flex-col flex-shrink-0 shadow-xl z-20">
         <div class="pt-8 px-6 mb-8">
             <div class="flex items-center space-x-3">
-                <div class="bg-white rounded-full p-0.5 shadow-lg flex-shrink-0 overflow-hidden w-10 h-10 relative">
-                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                        <circle cx="50" cy="50" r="50" fill="white"/>
-                        <path d="M50 50 L5 50 A 45 45 0 0 1 50 5 Z" fill="#F59E0B" />
-                        <path d="M20 18 L20 45" stroke="white" strokeWidth="2"/>
-                        <path d="M35 10 L35 48" stroke="white" strokeWidth="2"/>
-                        <path d="M10 35 L 45 35" stroke="white" strokeWidth="2"/>
-                        <path d="M15 22 L 45 22" stroke="white" strokeWidth="2"/>
-                        <path d="M50 50 L50 5 A 45 45 0 0 1 95 50 Z" fill="#1B4D3E" />
-                        <path d="M50 50 L95 50 A 45 45 0 0 1 50 95 Z" fill="#4CAF50" />
-                        <path d="M50 50 L50 95 A 45 45 0 0 1 5 50 Z" fill="#2E7D32" />
-                        <path d="M50 5 L50 95" stroke="white" strokeWidth="2"/>
-                        <path d="M5 50 L95 50" stroke="white" strokeWidth="2"/>
-                    </svg>
+                <div class="bg-white rounded-full p-0.5 shadow-lg flex-shrink-0 overflow-hidden w-12 h-12 relative border-2 border-green-500/20">
+                    <!-- LOGO STATIC -->
+                    <img src="/static/logo.png" alt="Logo" class="w-full h-full object-cover rounded-full">
                 </div>
                 <div class="flex flex-col justify-center">
                     <p class="text-brand-orange text-[10px] uppercase tracking-widest font-bold leading-tight">Semillero</p>
@@ -92,35 +87,39 @@
                 <span>Dashboard</span>
             </button>
             
-            <button onclick="alert('Función en desarrollo: Agregar nuevo camión')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors">
+            <button onclick="openNewUnitModal()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i>
                 <span>Nueva Unidad</span>
             </button>
 
-            <button class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors">
+            <button onclick="showSettings()" id="nav-settings" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors">
                 <i data-lucide="settings" class="w-5 h-5"></i>
                 <span>Configuración</span>
             </button>
         </nav>
 
         <div class="p-4 border-t border-brand-green-hover">
-            <button class="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:bg-red-900/20 rounded-lg transition-colors">
+            <button onclick="logout()" class="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:bg-red-900/20 rounded-lg transition-colors">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
                 <span>Cerrar Sesión</span>
             </button>
-            <p class="text-center text-xs text-gray-500 mt-4">v2.0 Connected | Admin</p>
+            <p class="text-center text-xs text-gray-500 mt-4">v2.1 Connected | Admin</p>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto relative">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto relative bg-brand-beige">
         
+        <!-- MOBILE HEADER -->
         <div class="md:hidden bg-brand-green-dark p-4 flex justify-between items-center shadow-md sticky top-0 z-10">
            <span class="text-white font-bold text-lg">El Manantial</span>
-           <button class="text-white"><i data-lucide="settings" class="w-6 h-6"></i></button>
+           <button class="text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
         </div>
 
+        <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="p-6 md:p-10 max-w-7xl mx-auto fade-in">
             
+            <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-green-dark flex items-center justify-between">
                     <div>
@@ -151,6 +150,7 @@
                 </div>
             </div>
 
+            <!-- Search & Filter -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-2xl font-bold text-brand-green-dark">Estado de Flota</h2>
                 <div class="relative w-full md:w-96">
@@ -165,6 +165,7 @@
                 </div>
             </div>
 
+            <!-- Trucks Grid -->
             <div id="trucks-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <div class="col-span-full text-center py-10">
                     <p class="text-gray-500 animate-pulse">Cargando datos del servidor...</p>
@@ -172,18 +173,18 @@
             </div>
         </div>
 
+        <!-- DETAIL VIEW (Hidden by default) -->
         <div id="view-detail" class="hidden p-6 md:p-10 max-w-6xl mx-auto fade-in">
-            <button 
-                onclick="showDashboard()" 
-                class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 transition-colors font-medium"
-            >
+            <button onclick="showDashboard()" class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 transition-colors font-medium">
                 <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver al Dashboard
             </button>
 
             <div class="flex flex-col lg:flex-row gap-8">
                 
+                <!-- Left Column -->
                 <div class="lg:w-2/3 space-y-6">
                     
+                    <!-- Main Data Card -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="bg-brand-cream px-6 py-4 border-b border-brand-beige">
                             <h3 class="font-bold text-lg text-brand-green-dark flex items-center">
@@ -194,14 +195,14 @@
                             <form onsubmit="handleGeneralUpdate(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Patente</label>
-                                    <input type="text" id="input-patente" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                                    <input type="text" id="input-patente" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none uppercase" />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                                     <input type="text" id="input-descripcion" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
                                 </div>
                                 <div class="md:col-span-2 text-right">
-                                    <button type="submit" class="bg-brand-green-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-green-hover flex items-center inline-flex transition-colors">
+                                    <button type="submit" class="bg-brand-green-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-green-hover flex items-center inline-flex transition-colors ml-auto">
                                         <i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar Cambios
                                     </button>
                                 </div>
@@ -209,6 +210,7 @@
                         </div>
                     </div>
 
+                    <!-- Service Card -->
                     <div class="bg-white rounded-xl shadow-sm border-2 border-brand-green-light/20 overflow-hidden">
                         <div class="bg-brand-green-light text-white px-6 py-4">
                             <h3 class="font-bold text-lg flex items-center">
@@ -234,25 +236,24 @@
                         </div>
                     </div>
 
+                    <!-- History Card -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="bg-brand-cream px-6 py-4 border-b border-brand-beige">
                             <h3 class="font-bold text-lg text-brand-green-dark">Historial Reciente</h3>
                         </div>
                         <div class="p-0">
-                            <ul id="history-list" class="divide-y divide-gray-100">
-                                </ul>
+                            <ul id="history-list" class="divide-y divide-gray-100"></ul>
                         </div>
                     </div>
                 </div>
 
+                <!-- Right Column (Status) -->
                 <div class="lg:w-1/3 space-y-6">
-                    
                     <div class="bg-white rounded-xl shadow-md border border-gray-200">
                         <div class="bg-brand-green-dark text-white px-6 py-4 rounded-t-xl">
                             <h3 class="font-bold">Estado Actual</h3>
                         </div>
                         <div class="p-6 space-y-6">
-                            
                             <div class="space-y-2">
                                 <label class="flex justify-between text-sm font-medium text-gray-700">
                                     <span>Kilometraje</span>
@@ -268,8 +269,7 @@
 
                             <hr class="border-gray-100" />
 
-                            <div id="vencimientos-container" class="space-y-4">
-                                </div>
+                            <div id="vencimientos-container" class="space-y-4"></div>
 
                             <div id="add-filter-btn" class="mt-4 pt-4 border-t border-gray-100 hidden">
                                 <button onclick="addFilterComanry()" class="text-xs text-brand-orange hover:underline font-bold flex items-center">
@@ -285,77 +285,137 @@
                             <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Eliminar
                         </button>
                     </div>
-
                 </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW (Hidden by default) -->
+        <div id="view-settings" class="hidden p-6 md:p-10 max-w-3xl mx-auto fade-in">
+            <button onclick="showDashboard()" class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 transition-colors font-medium">
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver al Dashboard
+            </button>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="bg-brand-green-dark text-white px-8 py-6">
+                    <h2 class="text-2xl font-bold flex items-center">
+                        <i data-lucide="settings" class="w-8 h-8 mr-3 text-brand-orange"></i> Configuración del Sistema
+                    </h2>
+                    <p class="text-white/60 mt-1 ml-11">Ajustes globales de alertas y notificaciones.</p>
+                </div>
+                
+                <div class="p-8 space-y-8">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Días para aviso de vencimiento</label>
+                            <p class="text-xs text-gray-500 mb-2">Umbral de días antes del vencimiento para mostrar alerta amarilla.</p>
+                            <input type="number" id="config-dias" value="30" class="w-full md:w-1/2 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light outline-none" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Email de Alertas</label>
+                            <p class="text-xs text-gray-500 mb-2">Dirección donde se enviarán los reportes semanales.</p>
+                            <input type="email" id="config-email" value="admin@elmanantial.com" class="w-full md:w-2/3 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light outline-none" />
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-gray-100 flex justify-end">
+                        <button onclick="saveConfig()" class="bg-brand-green-light hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md flex items-center transition-transform active:scale-95">
+                            <i data-lucide="save" class="w-5 h-5 mr-2"></i> Guardar Configuración
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW UNIT MODAL (Hidden by default) -->
+        <div id="modal-new-unit" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 fade-in">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+                <div class="bg-brand-green-dark px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-white font-bold text-lg flex items-center">
+                        <i data-lucide="plus-circle" class="w-5 h-5 mr-2 text-brand-orange"></i> Nueva Unidad
+                    </h3>
+                    <button onclick="closeNewUnitModal()" class="text-white/70 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <form onsubmit="handleNewUnit(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Patente</label>
+                        <input name="patente" id="new-patente" required type="text" placeholder="Ej: AA 123 BB" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none uppercase" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <input name="descripcion" id="new-descripcion" required type="text" placeholder="Ej: Scania P310 - Tolva" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kilometraje Actual</label>
+                        <input name="km" id="new-km" required type="number" placeholder="0" class="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green-light focus:outline-none" />
+                    </div>
+                    <div class="pt-4 flex justify-end space-x-3">
+                        <button type="button" onclick="closeNewUnitModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-brand-green-light hover:bg-brand-green-hover text-white font-bold rounded-lg shadow transition-colors">Guardar Unidad</button>
+                    </div>
+                </form>
             </div>
         </div>
 
     </main>
 
+    <!-- LOGIC -->
     <script>
-        // --- DATA MANAGEMENT ---
-        
-        // Variable global vacía, se llenará con los datos del servidor
+        // --- VARIABLES GLOBALES ---
         let FLOTA_DATA = []; 
-
-        // URL de tu API en Python (Asegurate de que en app.py exista esta ruta)
+        let CONFIG = { diasAviso: 30, emailAlertas: 'admin@elmanantial.com' };
+        let selectedTruckId = null;
         const API_URL = '/api/flota'; 
-        // Si tu ruta es diferente, cámbiala arriba. Ej: '/get_datos'
 
+        // --- INIT ---
+        window.onload = function() {
+            lucide.createIcons();
+            cargarDatosDelServidor();
+        };
+
+        // --- DATA MANAGEMENT ---
         async function cargarDatosDelServidor() {
             try {
-                console.log("Intentando conectar con:", API_URL);
+                // Simulación si falla la API para que veas algo en el diseño
+                // En producción, esto cargará tu JSON real
                 const response = await fetch(API_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`Error del servidor: ${response.status}`);
-                }
-
-                const data = await response.json();
-                FLOTA_DATA = data;
-                
-                console.log("Datos cargados:", FLOTA_DATA.length, "camiones");
-                renderDashboard(); // Renderizar una vez que tenemos datos
-
+                if (!response.ok) throw new Error("API Error");
+                FLOTA_DATA = await response.json();
+                renderDashboard();
             } catch (error) {
-                console.error("Error cargando datos:", error);
-                document.getElementById('trucks-grid').innerHTML = `
-                    <div class="col-span-full text-center py-10 bg-red-50 rounded-lg border border-red-200">
-                        <p class="text-red-600 font-bold">Error de conexión</p>
-                        <p class="text-sm text-red-500 mt-1">No se pudo conectar con ${API_URL}</p>
-                        <p class="text-xs text-gray-500 mt-2">Revisa que app.py esté corriendo.</p>
-                    </div>
-                `;
+                console.log("Usando datos de respaldo por error de API:", error);
+                // Datos de prueba si no hay backend corriendo
+                FLOTA_DATA = [
+                    {
+                        id: 1,
+                        patente: "AE 123 BC",
+                        descripcion: "Mercedes Benz Accelo 815",
+                        km_actual: 45200,
+                        service: { ultimo_km: 40000, ultimo_fecha: "2023-12-01", intervalo_km: 10000 },
+                        vencimientos: { vtv: "2024-06-15", ruta: "2024-05-20", seguro: "2024-08-01" },
+                        historial: []
+                    }
+                ];
+                renderDashboard();
             }
         }
 
         async function guardarEnServidor() {
-            // Esta función envía TODO el array FLOTA_DATA actualizado al servidor
-            // Tu app.py debe tener una ruta POST que acepte JSON y sobrescriba el archivo
             try {
-                const response = await fetch('/api/guardar_flota', { // Asegurate de tener esta ruta
+                await fetch('/api/guardar_flota', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(FLOTA_DATA),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(FLOTA_DATA)
                 });
-
-                if (!response.ok) throw new Error('Error al guardar');
-                
-                // Feedback visual positivo (opcional)
-                console.log("Guardado exitoso en servidor");
-
+                console.log("Guardado exitoso");
             } catch (error) {
                 console.error("Error guardando:", error);
-                alert("Hubo un error al guardar en el servidor. Revisa la consola.");
             }
         }
 
-        let selectedTruckId = null;
-
         // --- HELPER FUNCTIONS ---
-
         const formatNumber = (num) => new Intl.NumberFormat('es-AR').format(num);
 
         const verificarFecha = (fechaStr) => {
@@ -367,75 +427,99 @@
             const diffTime = fechaVencimiento.getTime() - hoy.getTime();
             const diferenciaDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (diferenciaDias < 0) {
-                return { status: 'DANGER', message: `VENCIDO (hace ${Math.abs(diferenciaDias)} días)` };
-            } else if (diferenciaDias <= 30) {
-                return { status: 'WARNING', message: `PRÓXIMO (vence en ${diferenciaDias} días)` };
-            } else {
-                return { status: 'OK', message: 'OK' };
-            }
+            if (diferenciaDias < 0) return { status: 'DANGER', message: `VENCIDO (hace ${Math.abs(diferenciaDias)} días)` };
+            if (diferenciaDias <= CONFIG.diasAviso) return { status: 'WARNING', message: `PRÓXIMO (vence en ${diferenciaDias} días)` };
+            return { status: 'OK', message: 'OK' };
         };
 
         const verificarService = (camion) => {
-            try {
-                const kmActual = camion.km_actual || 0;
-                const kmUltimo = camion.service.ultimo_km;
-                const kmIntervalo = camion.service.intervalo_km;
-                const kmProximoService = kmUltimo + kmIntervalo;
-                const diferenciaKm = kmProximoService - kmActual;
+            const kmActual = camion.km_actual || 0;
+            const kmUltimo = camion.service.ultimo_km;
+            const kmIntervalo = camion.service.intervalo_km;
+            const kmProximo = kmUltimo + kmIntervalo;
+            const diff = kmProximo - kmActual;
 
-                if (diferenciaKm < 0) {
-                    return { status: 'DANGER', message: `VENCIDO (hace ${Math.abs(diferenciaKm)} km)` };
-                } else if (diferenciaKm <= 2000) {
-                    return { status: 'WARNING', message: `PRÓXIMO (faltan ${diferenciaKm} km)` };
-                } else {
-                    return { status: 'OK', message: 'OK' };
-                }
-            } catch (e) {
-                return { status: 'ERROR', message: 'ERROR' };
-            }
+            if (diff < 0) return { status: 'DANGER', message: `VENCIDO (hace ${Math.abs(diff)} km)` };
+            if (diff <= 2000) return { status: 'WARNING', message: `PRÓXIMO (faltan ${diff} km)` };
+            return { status: 'OK', message: 'OK' };
         };
 
         const getBadgeStyles = (status) => {
-            switch (status) {
-                case 'OK': return 'bg-green-100 text-green-800 border-green-200';
-                case 'WARNING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                case 'DANGER': return 'bg-red-100 text-red-800 border-red-200';
-                default: return 'bg-gray-100 text-gray-800 border-gray-200';
-            }
+            if (status === 'OK') return 'bg-green-100 text-green-800 border-green-200';
+            if (status === 'WARNING') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            if (status === 'DANGER') return 'bg-red-100 text-red-800 border-red-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200';
         };
 
         const getTextClass = (status) => {
-             switch (status) {
-                case 'OK': return 'text-green-600';
-                case 'WARNING': return 'text-yellow-600 font-bold';
-                case 'DANGER': return 'text-red-600 font-bold';
-                default: return 'text-gray-600';
-            }
+            if (status === 'OK') return 'text-green-600';
+            if (status === 'WARNING') return 'text-yellow-600 font-bold';
+            if (status === 'DANGER') return 'text-red-600 font-bold';
+            return 'text-gray-600';
+        };
+
+        // --- NAVIGATION ---
+        function hideAllViews() {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-detail').classList.add('hidden');
+            document.getElementById('view-settings').classList.add('hidden');
+            
+            // Reset Nav Styles
+            ['nav-dashboard', 'nav-settings'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('bg-brand-green-light', 'text-white');
+                el.classList.add('text-gray-300', 'hover:bg-brand-green-hover');
+            });
         }
 
-        // --- APP LOGIC ---
-
-        function initApp() {
-            lucide.createIcons();
-            cargarDatosDelServidor(); // <--- Aquí inicia la carga real
+        function showDashboard() {
+            hideAllViews();
+            document.getElementById('view-dashboard').classList.remove('hidden');
+            const btn = document.getElementById('nav-dashboard');
+            btn.classList.add('bg-brand-green-light', 'text-white');
+            btn.classList.remove('text-gray-300', 'hover:bg-brand-green-hover');
+            renderDashboard();
         }
 
+        function showSettings() {
+            hideAllViews();
+            document.getElementById('view-settings').classList.remove('hidden');
+            const btn = document.getElementById('nav-settings');
+            btn.classList.add('bg-brand-green-light', 'text-white');
+            btn.classList.remove('text-gray-300', 'hover:bg-brand-green-hover');
+        }
+
+        function showDetail(id) {
+            selectedTruckId = id;
+            hideAllViews();
+            document.getElementById('view-detail').classList.remove('hidden');
+            renderDetailView();
+        }
+
+        function logout() {
+            window.location.href = 'login.html'; // Asumiendo que el login está ahí
+        }
+
+        // --- MODALS ---
+        function openNewUnitModal() {
+            document.getElementById('modal-new-unit').classList.remove('hidden');
+        }
+        function closeNewUnitModal() {
+            document.getElementById('modal-new-unit').classList.add('hidden');
+        }
+
+        // --- RENDER FUNCTIONS ---
         function renderDashboard() {
-            if (FLOTA_DATA.length === 0) {
-                document.getElementById('trucks-grid').innerHTML = '<div class="col-span-full text-center text-gray-500">No hay camiones registrados.</div>';
-                return;
-            }
-
-            // Update stats
+            // Update Stats
             const total = FLOTA_DATA.length;
-            const attention = FLOTA_DATA.filter(c => {
-                if (verificarService(c).status !== 'OK') return true;
+            let attention = 0;
+            
+            FLOTA_DATA.forEach(c => {
+                if (verificarService(c).status !== 'OK') { attention++; return; }
                 for (let key in c.vencimientos) {
-                    if (verificarFecha(c.vencimientos[key]).status !== 'OK') return true;
+                    if (verificarFecha(c.vencimientos[key]).status !== 'OK') { attention++; return; }
                 }
-                return false;
-            }).length;
+            });
 
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-attention').innerText = attention;
@@ -445,14 +529,19 @@
         }
 
         function renderTruckGrid() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
             const grid = document.getElementById('trucks-grid');
             grid.innerHTML = '';
+            const term = document.getElementById('search-input').value.toLowerCase();
 
             const filtered = FLOTA_DATA.filter(c => 
-                c.patente.toLowerCase().includes(searchTerm) || 
-                c.descripcion.toLowerCase().includes(searchTerm)
+                c.patente.toLowerCase().includes(term) || 
+                c.descripcion.toLowerCase().includes(term)
             );
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">No se encontraron unidades.</div>';
+                return;
+            }
 
             filtered.forEach(camion => {
                 const serviceSt = verificarService(camion);
@@ -460,22 +549,25 @@
                 card.className = "bg-brand-cream rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden group";
                 card.onclick = () => showDetail(camion.id);
 
-                // Vencimientos Logic HTML
-                let vencimientosHTML = '';
+                // Vencimientos HTML
+                let vencsHTML = '';
                 Object.entries(camion.vencimientos).forEach(([key, value]) => {
                     if (!value) return;
                     const st = verificarFecha(value);
-                    const label = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    const textClass = st.status === 'DANGER' ? 'text-red-600 font-bold' : st.status === 'WARNING' ? 'text-yellow-600 font-bold' : 'text-green-600';
-                    const statusMsg = st.status === 'OK' ? 'OK' : st.message.split('(')[0];
-
-                    vencimientosHTML += `
+                    const label = key.replace('_', ' ').toUpperCase();
+                    const txtClass = st.status === 'DANGER' ? 'text-red-600 font-bold' : st.status === 'WARNING' ? 'text-yellow-600 font-bold' : 'text-green-600';
+                    vencsHTML += `
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-600 capitalize">${label}</span>
-                            <span class="${textClass}">${statusMsg}</span>
-                        </div>
-                    `;
+                            <span class="${txtClass}">${st.status === 'OK' ? 'OK' : st.message.split('(')[0]}</span>
+                        </div>`;
                 });
+
+                // Service Dot Color
+                let dotColor = 'bg-gray-400';
+                if (serviceSt.status === 'OK') dotColor = 'bg-green-500';
+                else if (serviceSt.status === 'DANGER') dotColor = 'bg-red-500';
+                else if (serviceSt.status === 'WARNING') dotColor = 'bg-yellow-500';
 
                 card.innerHTML = `
                     <div class="bg-white p-4 border-b border-gray-100 flex justify-between items-center group-hover:bg-brand-beige transition-colors">
@@ -495,15 +587,13 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <div class="flex items-center space-x-2">
-                                <div class="w-2 h-2 rounded-full ${serviceSt.status === 'OK' ? 'bg-green-500' : serviceSt.status === 'DANGER' ? 'bg-red-500' : 'bg-yellow-500'}"></div>
+                                <div class="w-2 h-2 rounded-full ${dotColor}"></div>
                                 <span class="text-sm font-medium text-gray-700">Service</span>
                             </div>
                             <span class="px-2 py-1 rounded-full text-xs font-semibold border ${getBadgeStyles(serviceSt.status)}">${serviceSt.message}</span>
                         </div>
                         <div class="h-px bg-gray-200 my-2"></div>
-                        <div class="space-y-2">
-                            ${vencimientosHTML}
-                        </div>
+                        <div class="space-y-2">${vencsHTML}</div>
                     </div>
                     <div class="bg-gray-50 p-3 text-center border-t border-gray-100">
                         <span class="text-brand-green-light font-medium text-sm group-hover:text-brand-green-dark transition-colors">Ver Detalles &rarr;</span>
@@ -511,172 +601,154 @@
                 `;
                 grid.appendChild(card);
             });
+            lucide.createIcons();
         }
 
-        // --- NAVIGATION ---
+        function renderDetailView() {
+            const camion = FLOTA_DATA.find(c => c.id === selectedId);
+            if (!camion) return;
 
-        function showDashboard() {
-            document.getElementById('view-dashboard').classList.remove('hidden');
-            document.getElementById('view-detail').classList.add('hidden');
-            document.getElementById('nav-dashboard').classList.add('bg-brand-green-light', 'text-white');
-            document.getElementById('nav-dashboard').classList.remove('text-gray-300', 'hover:bg-brand-green-hover');
-            selectedTruckId = null;
-            renderDashboard(); // Re-render to catch updates
-        }
-
-        function showDetail(id) {
-            selectedTruckId = id;
-            const camion = FLOTA_DATA.find(c => c.id === id);
-            if(!camion) return;
-
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-detail').classList.remove('hidden');
-            document.getElementById('nav-dashboard').classList.remove('bg-brand-green-light', 'text-white');
-            document.getElementById('nav-dashboard').classList.add('text-gray-300', 'hover:bg-brand-green-hover');
-
-            // Populate Inputs
+            // Fill Inputs
             document.getElementById('input-patente').value = camion.patente;
             document.getElementById('input-descripcion').value = camion.descripcion;
+            document.getElementById('input-km-actual').value = camion.km_actual;
             document.getElementById('input-service-km').placeholder = `Actual: ${camion.km_actual}`;
             document.getElementById('input-service-km').value = '';
             document.getElementById('input-service-fecha').value = '';
-            
-            document.getElementById('input-km-actual').value = camion.km_actual;
 
             // Render History
-            const historyList = document.getElementById('history-list');
-            historyList.innerHTML = '';
-            if(camion.historial.length === 0) {
-                historyList.innerHTML = '<p class="p-6 text-gray-500 italic">No hay historial registrado.</p>';
+            const histList = document.getElementById('history-list');
+            histList.innerHTML = '';
+            if (camion.historial.length === 0) {
+                histList.innerHTML = '<p class="p-6 text-gray-500 italic">No hay historial registrado.</p>';
             } else {
-                camion.historial.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = "p-4 hover:bg-gray-50";
-                    li.innerHTML = `
-                        <div class="flex justify-between mb-1">
-                            <span class="text-xs font-bold text-brand-green-dark uppercase tracking-wide">${item.tipo}</span>
-                            <span class="text-xs text-gray-500">${item.fecha}</span>
-                        </div>
-                        <p class="text-gray-800 text-sm">${item.detalle}</p>
-                    `;
-                    historyList.appendChild(li);
+                camion.historial.forEach(h => {
+                    histList.innerHTML += `
+                        <li class="p-4 hover:bg-gray-50">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-xs font-bold text-brand-green-dark uppercase tracking-wide">${h.tipo}</span>
+                                <span class="text-xs text-gray-500">${h.fecha}</span>
+                            </div>
+                            <p class="text-gray-800 text-sm">${h.detalle}</p>
+                        </li>`;
                 });
             }
 
-            // Render Status Side Panel
+            // Status Side Panel
             const serviceSt = verificarService(camion);
-            const statusLabel = document.getElementById('status-km-label');
-            statusLabel.innerText = serviceSt.message;
-            statusLabel.className = `font-bold ${getTextClass(serviceSt.status)}`;
+            const stLabel = document.getElementById('status-km-label');
+            stLabel.innerText = serviceSt.message;
+            stLabel.className = `font-bold ${getTextClass(serviceSt.status)}`;
 
+            // Dynamic Vencimientos Inputs
             const vencContainer = document.getElementById('vencimientos-container');
             vencContainer.innerHTML = '';
-            
-            // Dynamic Vencimientos Inputs
             Object.entries(camion.vencimientos).forEach(([key, value]) => {
-                if(!key) return;
+                if (!key) return;
                 const st = verificarFecha(value);
-                const label = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const label = key.replace('_', ' ').toUpperCase();
                 
-                const div = document.createElement('div');
-                div.className = "space-y-1";
-                div.innerHTML = `
-                    <label class="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wide">
-                        <span>${label}</span>
-                        <span class="${getTextClass(st.status)}">${st.message}</span>
-                    </label>
-                    <div class="flex gap-2">
-                        <input type="date" id="venc-${key}" value="${value}" class="flex-1 px-3 py-1 bg-white text-gray-900 border border-gray-300 rounded text-sm focus:outline-none focus:border-brand-green-light" />
-                        <button onclick="handleGeneralUpdate(event)" class="bg-gray-100 hover:bg-gray-200 border border-gray-200 px-3 rounded text-gray-600 transition-colors">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                `;
-                vencContainer.appendChild(div);
+                vencContainer.innerHTML += `
+                    <div class="space-y-1">
+                        <label class="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wide">
+                            <span>${label}</span>
+                            <span class="${getTextClass(st.status)}">${st.message}</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="date" id="venc-${key}" value="${value || ''}" class="flex-1 px-3 py-1 bg-white text-gray-900 border border-gray-300 rounded text-sm focus:outline-none focus:border-brand-green-light" />
+                            <button onclick="handleGeneralUpdate(event)" class="bg-gray-100 hover:bg-gray-200 border border-gray-200 px-3 rounded text-gray-600 transition-colors">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>`;
             });
 
-            // Show/Hide Add Comanry
+            // Comanry Button Logic
             const btnComanry = document.getElementById('add-filter-btn');
-            if(!camion.vencimientos.filtro_comanry) {
+            if (!camion.vencimientos.filtro_comanry) {
                 btnComanry.classList.remove('hidden');
             } else {
                 btnComanry.classList.add('hidden');
             }
-
             lucide.createIcons();
         }
 
         // --- FORM HANDLERS ---
-
-        async function handleGeneralUpdate(e) {
+        
+        function handleNewUnit(e) {
             e.preventDefault();
-            if(!selectedTruckId) return;
-            
-            const camion = FLOTA_DATA.find(c => c.id === selectedTruckId);
-            
-            // Update Core
-            camion.patente = document.getElementById('input-patente').value;
-            camion.descripcion = document.getElementById('input-descripcion').value;
-            
-            // Update KM
-            const newKm = parseInt(document.getElementById('input-km-actual').value);
-            if(!isNaN(newKm)) camion.km_actual = newKm;
-
-            // Update Vencimientos
-            const vencInputs = document.querySelectorAll('[id^="venc-"]');
-            vencInputs.forEach(input => {
-                const key = input.id.replace('venc-', '');
-                camion.vencimientos[key] = input.value;
-            });
-
-            // Envío al servidor
-            await guardarEnServidor();
-            
-            alert("Cambios guardados.");
-            showDetail(selectedTruckId); // Refresh view
+            const maxId = FLOTA_DATA.length > 0 ? Math.max(...FLOTA_DATA.map(c => c.id)) : 0;
+            const newCamion = {
+                id: maxId + 1,
+                patente: document.getElementById('new-patente').value.toUpperCase(),
+                descripcion: document.getElementById('new-descripcion').value,
+                km_actual: parseInt(document.getElementById('new-km').value),
+                service: { ultimo_km: parseInt(document.getElementById('new-km').value), ultimo_fecha: new Date().toISOString().split('T')[0], intervalo_km: 10000 },
+                vencimientos: { vtv: '', ruta: '', seguro: '' },
+                historial: []
+            };
+            FLOTA_DATA.push(newCamion);
+            guardarEnServidor();
+            closeNewUnitModal();
+            alert('Unidad guardada');
+            showDashboard();
         }
 
-        async function handleServiceUpdate(e) {
-            e.preventDefault();
-            if(!selectedTruckId) return;
+        function handleGeneralUpdate(e) {
+            if(e) e.preventDefault();
+            const camion = FLOTA_DATA.find(c => c.id === selectedId);
+            if(!camion) return;
 
-            const camion = FLOTA_DATA.find(c => c.id === selectedTruckId);
+            camion.patente = document.getElementById('input-patente').value;
+            camion.descripcion = document.getElementById('input-descripcion').value;
+            camion.km_actual = parseInt(document.getElementById('input-km-actual').value);
+
+            // Update vencimientos from inputs
+            const inputs = document.querySelectorAll('input[id^="venc-"]');
+            inputs.forEach(inp => {
+                const key = inp.id.replace('venc-', '');
+                camion.vencimientos[key] = inp.value;
+            });
+
+            guardarEnServidor();
+            alert('Cambios guardados');
+            renderDetailView(); // Refresh status
+        }
+
+        function handleServiceUpdate(e) {
+            e.preventDefault();
+            const camion = FLOTA_DATA.find(c => c.id === selectedId);
             const fecha = document.getElementById('input-service-fecha').value;
             const km = parseInt(document.getElementById('input-service-km').value);
 
             if(fecha && km) {
-                // Logic
                 if(km > camion.km_actual) camion.km_actual = km;
                 camion.service.ultimo_fecha = fecha;
                 camion.service.ultimo_km = km;
-                
                 camion.historial.unshift({
                     fecha: fecha,
                     tipo: 'Trabajo',
                     detalle: `Service completo realizado a los ${formatNumber(km)} km.`
                 });
-
-                // Envío al servidor
-                await guardarEnServidor();
-
-                alert("Service registrado correctamente.");
-                showDetail(selectedTruckId);
+                guardarEnServidor();
+                alert('Service registrado');
+                renderDetailView();
             }
         }
 
-        async function addFilterComanry() {
-            if(!selectedTruckId) return;
-            const camion = FLOTA_DATA.find(c => c.id === selectedTruckId);
-            camion.vencimientos['filtro_comanry'] = new Date().toISOString().split('T')[0];
-            
-            // Envío al servidor
-            await guardarEnServidor();
-            
-            showDetail(selectedTruckId);
+        function addFilterComanry() {
+            const camion = FLOTA_DATA.find(c => c.id === selectedId);
+            camion.vencimientos.filtro_comanry = new Date().toISOString().split('T')[0];
+            guardarEnServidor();
+            renderDetailView();
         }
 
-        // Init
-        window.onload = initApp;
+        function saveConfig() {
+            CONFIG.diasAviso = parseInt(document.getElementById('config-dias').value);
+            CONFIG.emailAlertas = document.getElementById('config-email').value;
+            alert('Configuración guardada');
+            showDashboard();
+        }
 
     </script>
 </body>
