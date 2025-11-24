@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor Flota - El Manantial</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -27,19 +23,33 @@
             }
         }
     </script>
-
     <style>
         body { font-family: 'Roboto', sans-serif; background-color: #F3EAD6; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Estilo para el menú móvil superpuesto */
+        .mobile-menu-open { display: flex !important; position: fixed; top: 0; left: 0; height: 100%; width: 100%; z-index: 50; }
     </style>
 </head>
-<body class="text-gray-800 h-screen overflow-hidden flex">
+<body class="text-gray-800 h-screen overflow-hidden flex flex-col md:flex-row">
 
-    <aside class="w-64 bg-brand-green-dark text-white hidden md:flex flex-col flex-shrink-0 shadow-xl z-20">
-        <div class="pt-8 px-6 mb-8">
+    <div class="md:hidden bg-brand-green-dark p-4 flex justify-between items-center shadow-md sticky top-0 z-30 w-full shrink-0">
+        <span class="text-white font-bold text-lg">El Manantial</span>
+        <button class="text-white" onclick="toggleSidebar()">
+            <i data-lucide="menu" class="w-7 h-7"></i>
+        </button>
+    </div>
+
+    <aside id="sidebar" class="w-full md:w-64 bg-brand-green-dark text-white hidden md:flex flex-col flex-shrink-0 shadow-xl z-40 md:relative">
+        
+        <div class="md:hidden absolute top-4 right-4">
+            <button onclick="toggleSidebar()" class="text-white/70 hover:text-white">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+        </div>
+
+        <div class="pt-8 px-6 mb-8 flex flex-col items-center md:items-start">
             <div class="flex items-center space-x-3">
                 <div class="bg-white rounded-full p-0.5 shadow-lg flex-shrink-0 overflow-hidden w-12 h-12 relative border-2 border-green-500/20">
                     <img src="/static/logo.png" alt="Logo Semillero" class="w-full h-full object-cover">
@@ -47,14 +57,13 @@
                 <div class="flex flex-col justify-center">
                     <p class="text-brand-orange text-[10px] uppercase tracking-widest font-bold leading-tight">Semillero</p>
                     <h1 class="text-white text-lg font-bold leading-none tracking-tight mt-0.5">
-                        El Manantial
-                        <span class="text-[9px] font-normal opacity-70 ml-1 align-top">S.R.L</span>
+                        El Manantial <span class="text-[9px] font-normal opacity-70 ml-1 align-top">S.R.L</span>
                     </h1>
                 </div>
             </div>
         </div>
         
-        <nav class="flex-1 px-4 space-y-2 mt-4">
+        <nav class="flex-1 px-4 space-y-2 mt-4 w-full">
             <button onclick="showDashboard()" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors bg-brand-green-light text-white font-semibold">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                 <span>Dashboard</span>
@@ -71,59 +80,39 @@
             </button>
         </nav>
 
-        <div class="p-4 border-t border-brand-green-hover">
+        <div class="p-4 border-t border-brand-green-hover w-full mt-auto">
             <button onclick="logout()" class="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:bg-red-900/20 rounded-lg transition-colors">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
                 <span>Cerrar Sesión</span>
             </button>
-            <p class="text-center text-xs text-gray-500 mt-4">v2.2 Fix | Admin</p>
+            <p class="text-center text-xs text-gray-500 mt-4">v2.3 Mobile | Admin</p>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto relative bg-brand-beige">
+    <main class="flex-1 overflow-y-auto relative bg-brand-beige w-full h-full">
         
-        <div class="md:hidden bg-brand-green-dark p-4 flex justify-between items-center shadow-md sticky top-0 z-10">
-           <span class="text-white font-bold text-lg">El Manantial</span>
-           <button class="text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
-        </div>
-
-        <div id="view-dashboard" class="p-6 md:p-10 max-w-7xl mx-auto fade-in">
+        <div id="view-dashboard" class="p-4 md:p-10 max-w-7xl mx-auto fade-in pb-20">
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-green-dark flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm font-medium">Total Unidades</p>
-                        <h3 id="stat-total" class="text-3xl font-bold text-gray-800">...</h3>
-                    </div>
-                    <div class="bg-brand-beige p-3 rounded-full">
-                        <i data-lucide="truck" class="w-6 h-6 text-brand-green-dark"></i>
-                    </div>
+                    <div><p class="text-gray-500 text-sm font-medium">Total Unidades</p><h3 id="stat-total" class="text-3xl font-bold text-gray-800">...</h3></div>
+                    <div class="bg-brand-beige p-3 rounded-full"><i data-lucide="truck" class="w-6 h-6 text-brand-green-dark"></i></div>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-orange flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm font-medium">Atención Requerida</p>
-                        <h3 id="stat-attention" class="text-3xl font-bold text-gray-800">...</h3>
-                    </div>
-                    <div class="bg-orange-100 p-3 rounded-full">
-                        <i data-lucide="alert-triangle" class="w-6 h-6 text-brand-orange"></i>
-                    </div>
+                    <div><p class="text-gray-500 text-sm font-medium">Atención Requerida</p><h3 id="stat-attention" class="text-3xl font-bold text-gray-800">...</h3></div>
+                    <div class="bg-orange-100 p-3 rounded-full"><i data-lucide="alert-triangle" class="w-6 h-6 text-brand-orange"></i></div>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm font-medium">Operativos OK</p>
-                        <h3 id="stat-ok" class="text-3xl font-bold text-gray-800">...</h3>
-                    </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
-                    </div>
+                    <div><p class="text-gray-500 text-sm font-medium">Operativos OK</p><h3 id="stat-ok" class="text-3xl font-bold text-gray-800">...</h3></div>
+                    <div class="bg-green-100 p-3 rounded-full"><i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i></div>
                 </div>
             </div>
 
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-brand-green-dark">Estado de Flota</h2>
+                <h2 class="text-2xl font-bold text-brand-green-dark self-start md:self-center">Estado de Flota</h2>
                 <div class="relative w-full md:w-96">
-                    <input type="text" id="search-input" placeholder="Buscar por patente o descripción..." class="w-full pl-10 pr-4 py-2 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-green-light" oninput="renderTruckGrid()" />
-                    <i data-lucide="search" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400"></i>
+                    <input type="text" id="search-input" placeholder="Buscar..." class="w-full pl-10 pr-4 py-3 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-green-light" oninput="renderTruckGrid()" />
+                    <i data-lucide="search" class="absolute left-3 top-3.5 w-5 h-5 text-gray-400"></i>
                 </div>
             </div>
 
@@ -132,9 +121,9 @@
             </div>
         </div>
 
-        <div id="view-detail" class="hidden p-6 md:p-10 max-w-6xl mx-auto fade-in">
+        <div id="view-detail" class="hidden p-4 md:p-10 max-w-6xl mx-auto fade-in pb-20">
             <button onclick="showDashboard()" class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 transition-colors font-medium">
-                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver al Dashboard
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver
             </button>
 
             <div class="flex flex-col lg:flex-row gap-8">
@@ -147,20 +136,20 @@
                             <form onsubmit="handleGeneralUpdate(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Patente</label><input type="text" id="input-patente" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg uppercase" /></div>
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label><input type="text" id="input-descripcion" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" /></div>
-                                <div class="md:col-span-2 text-right"><button type="submit" class="bg-brand-green-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-green-hover inline-flex items-center transition-colors ml-auto"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar Cambios</button></div>
+                                <div class="md:col-span-2 text-right"><button type="submit" class="bg-brand-green-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-green-hover inline-flex items-center w-full md:w-auto justify-center"><i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar Cambios</button></div>
                             </form>
                         </div>
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border-2 border-brand-green-light/20 overflow-hidden">
                         <div class="bg-brand-green-light text-white px-6 py-4">
-                            <h3 class="font-bold text-lg flex items-center"><i data-lucide="wrench" class="w-5 h-5 mr-2"></i> Registrar Service Completo</h3>
+                            <h3 class="font-bold text-lg flex items-center"><i data-lucide="wrench" class="w-5 h-5 mr-2"></i> Registrar Service</h3>
                         </div>
                         <div class="p-6">
                             <form onsubmit="handleServiceUpdate(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label><input type="date" id="input-service-fecha" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" /></div>
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">KM del Service</label><input type="number" id="input-service-km" required placeholder="0" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" /></div>
-                                <div class="md:col-span-2"><button type="submit" class="w-full bg-brand-green-light hover:bg-green-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md">Registrar Service</button></div>
+                                <div class="md:col-span-2"><button type="submit" class="w-full bg-brand-green-light hover:bg-green-600 text-white font-bold py-2 rounded-lg shadow-md">Registrar Service</button></div>
                             </form>
                         </div>
                     </div>
@@ -197,17 +186,27 @@
             </div>
         </div>
 
-        <div id="view-settings" class="hidden p-6 md:p-10 max-w-3xl mx-auto fade-in">
+        <div id="view-settings" class="hidden p-4 md:p-10 max-w-3xl mx-auto fade-in pb-20">
             <button onclick="showDashboard()" class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 transition-colors font-medium"><i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver al Dashboard</button>
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="bg-brand-green-dark text-white px-8 py-6"><h2 class="text-2xl font-bold flex items-center"><i data-lucide="settings" class="w-8 h-8 mr-3 text-brand-orange"></i> Configuración</h2></div>
-                <div class="p-8 space-y-8">
+                <div class="bg-brand-green-dark text-white px-8 py-6">
+                    <h2 class="text-2xl font-bold flex items-center"><i data-lucide="settings" class="w-8 h-8 mr-3 text-brand-orange"></i> Configuración</h2>
+                    <p class="text-white/60 mt-1 md:ml-11 text-sm">Alertas y notificaciones del sistema.</p>
+                </div>
+                <div class="p-6 md:p-8 space-y-8">
                     <div class="grid grid-cols-1 gap-6">
-                        <div><label class="block text-sm font-bold text-gray-700 mb-2">Días para aviso</label><input type="number" id="config-dias" value="30" class="w-full md:w-1/2 px-4 py-2 border rounded-lg" /></div>
-                        <div><label class="block text-sm font-bold text-gray-700 mb-2">Email Alertas</label><input type="email" id="config-email" value="admin@elmanantial.com" class="w-full md:w-2/3 px-4 py-2 border rounded-lg" /></div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Días para aviso de vencimiento</label>
+                            <input type="number" id="config-dias" class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-green-light" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Emails de Alertas</label>
+                            <p class="text-xs text-gray-500 mb-2">Separa múltiples correos con comas (,)</p>
+                            <input type="text" id="config-email" placeholder="admin@empresa.com, logistica@empresa.com" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-green-light" />
+                        </div>
                     </div>
                     <div class="pt-6 border-t border-gray-100 flex justify-end">
-                        <button onclick="saveConfig()" class="bg-brand-green-light hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md flex items-center"><i data-lucide="save" class="w-5 h-5 mr-2"></i> Guardar</button>
+                        <button onclick="saveConfig()" class="bg-brand-green-light hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md flex items-center w-full md:w-auto justify-center"><i data-lucide="save" class="w-5 h-5 mr-2"></i> Guardar Configuración</button>
                     </div>
                 </div>
             </div>
@@ -235,34 +234,63 @@
 
     <script>
         let FLOTA_DATA = []; 
-        let CONFIG = { diasAviso: 30, emailAlertas: 'admin@elmanantial.com' };
+        let CONFIG = { diasAviso: 30, emailAlertas: '' };
         let selectedTruckId = null;
-        const API_URL = '/api/flota'; 
+        const API_FLOTA = '/api/flota';
+        const API_CONFIG = '/api/config';
 
-        // --- INIT ---
         window.onload = function() {
             lucide.createIcons();
-            cargarDatosDelServidor();
+            cargarTodo();
         };
 
-        // --- 1. CARGA DE DATOS BLINDADA ---
-        async function cargarDatosDelServidor() {
+        // --- MENÚ MÓVIL (NUEVO) ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            // Si está oculto (default en móvil), lo mostramos fixed.
+            // Usamos una clase especial 'mobile-menu-open' definida en CSS
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('mobile-menu-open');
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('mobile-menu-open');
+            }
+        }
+
+        function closeSidebarMobile() {
+            // Cierra el menú solo si estamos en móvil (pantalla chica)
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('mobile-menu-open');
+            }
+        }
+
+        // --- CARGA DE DATOS ---
+        async function cargarTodo() {
             try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error("API Error");
+                // Cargar Config
+                const resConf = await fetch(API_CONFIG);
+                if(resConf.ok) {
+                    CONFIG = await resConf.json();
+                    document.getElementById('config-dias').value = CONFIG.diasAviso;
+                    document.getElementById('config-email').value = CONFIG.emailAlertas;
+                }
+
+                // Cargar Flota
+                const resFlota = await fetch(API_FLOTA);
+                if (!resFlota.ok) throw new Error("API Error");
                 
-                let rawData = await response.json();
+                let rawData = await resFlota.json();
                 
-                // NORMALIZACIÓN DE DATOS (Esto repara camiones viejos al vuelo)
                 FLOTA_DATA = rawData.map(c => ({
                     ...c,
-                    id: parseInt(c.id), // Aseguramos que sea número
+                    id: parseInt(c.id),
                     patente: c.patente || "SIN PATENTE",
                     descripcion: c.descripcion || "Sin descripción",
                     km_actual: c.km_actual || 0,
-                    // Si falta service, creamos objeto por defecto
                     service: c.service || { ultimo_fecha: "", ultimo_km: 0, intervalo_km: 10000 },
-                    // Aseguramos que vencimientos tenga todas las claves
                     vencimientos: {
                         desinfeccion: c.vencimientos?.desinfeccion || "",
                         seguro: c.vencimientos?.seguro || "",
@@ -274,24 +302,33 @@
 
                 renderDashboard();
             } catch (error) {
-                console.error("Error cargando datos:", error);
-                document.getElementById('trucks-grid').innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Error conectando con el servidor.</div>';
+                console.error("Error cargando:", error);
+                document.getElementById('trucks-grid').innerHTML = '<div class="col-span-full text-center py-10 text-red-500">Error de conexión.</div>';
             }
         }
 
         async function guardarEnServidor() {
             try {
                 await fetch('/api/guardar_flota', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(FLOTA_DATA)
                 });
-                console.log("Guardado exitoso");
                 return true;
-            } catch (error) {
-                alert("Error al guardar en el servidor.");
-                return false;
-            }
+            } catch (error) { alert("Error al guardar."); return false; }
+        }
+
+        async function saveConfig() {
+            CONFIG.diasAviso = parseInt(document.getElementById('config-dias').value);
+            CONFIG.emailAlertas = document.getElementById('config-email').value;
+            
+            try {
+                await fetch('/api/guardar_config', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(CONFIG)
+                });
+                alert("Configuración guardada correctamente.");
+                showDashboard();
+            } catch(e) { alert("Error al guardar config."); }
         }
 
         // --- HELPERS ---
@@ -324,6 +361,7 @@
                 document.getElementById(id).classList.remove('bg-brand-green-light', 'text-white');
                 document.getElementById(id).classList.add('text-gray-300');
             });
+            closeSidebarMobile(); // Cerrar menú al navegar en móvil
         }
 
         function showDashboard() {
@@ -340,7 +378,6 @@
         }
 
         function showDetail(id) {
-            // Convertimos a int para asegurar coincidencia
             selectedTruckId = parseInt(id);
             hideAllViews();
             document.getElementById('view-detail').classList.remove('hidden');
@@ -349,14 +386,14 @@
 
         function logout() { window.location.href = '/logout'; }
 
-        // --- MODALS ---
         function openNewUnitModal() { 
             document.getElementById('modal-new-unit').classList.remove('hidden'); 
             document.getElementById('form-new-truck').reset();
+            closeSidebarMobile();
         }
         function closeNewUnitModal() { document.getElementById('modal-new-unit').classList.add('hidden'); }
 
-        // --- RENDER DASHBOARD ---
+        // --- RENDERS ---
         function renderDashboard() {
             const grid = document.getElementById('trucks-grid');
             grid.innerHTML = '';
@@ -371,12 +408,9 @@
             document.getElementById('stat-attention').innerText = att;
             document.getElementById('stat-ok').innerText = FLOTA_DATA.length - att;
 
-            const filtered = FLOTA_DATA.filter(c => c.patente.toLowerCase().includes(term) || c.descripcion.toLowerCase().includes(term));
-
-            filtered.forEach(c => {
+            FLOTA_DATA.filter(c => c.patente.toLowerCase().includes(term) || c.descripcion.toLowerCase().includes(term)).forEach(c => {
                 const sv = verificarService(c);
                 let vHtml = '';
-                // Mostramos solo los que tienen fecha en el dashboard
                 Object.entries(c.vencimientos).forEach(([k,v]) => {
                     if(!v || k === 'filtro_comanry') return;
                     const st = verificarFecha(v);
@@ -402,7 +436,6 @@
             lucide.createIcons();
         }
 
-        // --- RENDER DETAIL ---
         function renderDetailView() {
             const c = FLOTA_DATA.find(x => x.id === selectedTruckId);
             if(!c) return;
@@ -412,19 +445,15 @@
             document.getElementById('input-km-actual').value = c.km_actual;
             document.getElementById('input-service-km').placeholder = `Actual: ${c.km_actual}`;
             
-            // Historial
             const hl = document.getElementById('history-list');
             hl.innerHTML = c.historial.length ? '' : '<p class="p-4 text-gray-400 italic text-sm">Sin historial.</p>';
             c.historial.forEach(h => {
                 hl.innerHTML += `<li class="p-4 border-b border-gray-100 last:border-0"><div class="flex justify-between text-xs font-bold text-brand-green-dark"><span>${h.tipo}</span><span>${h.fecha}</span></div><p class="text-sm text-gray-700 mt-1">${h.detalle}</p></li>`;
             });
 
-            // Vencimientos
             const vc = document.getElementById('vencimientos-container');
             vc.innerHTML = '';
-            const campos = ['desinfeccion', 'seguro', 'vtv', 'filtro_comanry'];
-            
-            campos.forEach(k => {
+            ['desinfeccion', 'seguro', 'vtv', 'filtro_comanry'].forEach(k => {
                 const v = c.vencimientos[k] || '';
                 const st = verificarFecha(v);
                 
@@ -441,8 +470,7 @@
                 <div class="flex gap-2"><input type="date" id="venc-${k}" value="${v}" class="flex-1 border rounded px-2 py-1 text-sm"><button onclick="handleGeneralUpdate(event)" class="bg-gray-100 px-2 rounded border hover:bg-gray-200"><i data-lucide="save" class="w-3 h-3"></i></button></div></div>`;
             });
 
-            const btnComanry = document.getElementById('add-filter-btn');
-            btnComanry.className = c.vencimientos.filtro_comanry ? 'hidden' : 'mt-4 pt-4 border-t';
+            document.getElementById('add-filter-btn').className = c.vencimientos.filtro_comanry ? 'hidden' : 'mt-4 pt-4 border-t';
             
             const ss = verificarService(c);
             const lbl = document.getElementById('status-km-label');
@@ -452,7 +480,6 @@
             lucide.createIcons();
         }
 
-        // --- HANDLERS ---
         async function handleNewUnit(e) {
             e.preventDefault();
             const maxId = FLOTA_DATA.length > 0 ? Math.max(...FLOTA_DATA.map(c => c.id)) : 0;
@@ -476,9 +503,7 @@
             c.descripcion = document.getElementById('input-descripcion').value;
             const nk = parseInt(document.getElementById('input-km-actual').value);
             if(!isNaN(nk)) c.km_actual = nk;
-            
             document.querySelectorAll('input[id^="venc-"]').forEach(i => c.vencimientos[i.id.replace('venc-','')] = i.value);
-            
             await guardarEnServidor();
             alert("Guardado.");
             renderDetailView();
@@ -489,12 +514,10 @@
             const c = FLOTA_DATA.find(x => x.id === selectedTruckId);
             const f = document.getElementById('input-service-fecha').value;
             const k = parseInt(document.getElementById('input-service-km').value);
-            
             if(k > c.km_actual) c.km_actual = k;
             c.service.ultimo_fecha = f;
             c.service.ultimo_km = k;
             c.historial.unshift({ fecha: f, tipo: 'Service', detalle: `Service a los ${formatNumber(k)} km.` });
-            
             await guardarEnServidor();
             alert("Service registrado.");
             renderDetailView();
@@ -511,13 +534,6 @@
             if(!confirm("¿Eliminar esta unidad?")) return;
             FLOTA_DATA = FLOTA_DATA.filter(c => c.id !== selectedTruckId);
             await guardarEnServidor();
-            showDashboard();
-        }
-
-        function saveConfig() {
-            CONFIG.diasAviso = parseInt(document.getElementById('config-dias').value);
-            CONFIG.emailAlertas = document.getElementById('config-email').value;
-            alert("Configuración guardada (Local)");
             showDashboard();
         }
     </script>
