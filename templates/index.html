@@ -394,7 +394,7 @@
         function closeNewUnitModal() { document.getElementById('modal-new-unit').classList.add('hidden'); }
 
         // --- RENDERS ---
-        function renderDashboard() {
+     function renderDashboard() {
             const grid = document.getElementById('trucks-grid');
             grid.innerHTML = '';
             const term = document.getElementById('search-input').value.toLowerCase();
@@ -408,14 +408,25 @@
             document.getElementById('stat-attention').innerText = att;
             document.getElementById('stat-ok').innerText = FLOTA_DATA.length - att;
 
-            FLOTA_DATA.filter(c => c.patente.toLowerCase().includes(term) || c.descripcion.toLowerCase().includes(term)).forEach(c => {
+            const filtered = FLOTA_DATA.filter(c => c.patente.toLowerCase().includes(term) || c.descripcion.toLowerCase().includes(term));
+
+            filtered.forEach(c => {
                 const sv = verificarService(c);
                 let vHtml = '';
+                
+                // --- AQUI ESTA EL CAMBIO ---
+                // Antes decía: if(!v || k === 'filtro_comanry') return;
+                // Ahora permitimos que pase todo:
                 Object.entries(c.vencimientos).forEach(([k,v]) => {
-                    if(!v || k === 'filtro_comanry') return;
+                    if(!v) return; // Solo saltamos si la fecha está vacía
+                    
                     const st = verificarFecha(v);
-                    vHtml += `<div class="flex justify-between text-xs"><span class="capitalize text-gray-500">${k}</span><span class="${getTextClass(st.status)}">${st.message}</span></div>`;
+                    // Hacemos que el nombre se vea bonito (F. COMANRY) para que entre bien
+                    let label = k.replace('filtro_comanry', 'F. Comanry').replace('_', ' ').toUpperCase();
+                    
+                    vHtml += `<div class="flex justify-between text-xs"><span class="capitalize text-gray-500">${label}</span><span class="${getTextClass(st.status)}">${st.message}</span></div>`;
                 });
+                // ---------------------------
 
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer border overflow-hidden";
