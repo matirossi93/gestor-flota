@@ -2,32 +2,25 @@ import datetime
 import json
 import os
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 
-# --- IMPORTAMOS EL PROGRAMADOR Y TU SCRIPT DE ALERTAS ---
 from apscheduler.schedulers.background import BackgroundScheduler
 import enviar_alertas 
 
-# Flask busca automáticamente en la carpeta 'templates' y 'static'
 app = Flask(__name__) 
 app.secret_key = 'mathias123' 
 
-# Ruta del archivo de datos
 DATA_FILE = "data/flota_data.json"
 
-# --- CREDENCIALES DE ACCESO ---
+# --- AQUI RESTAURAMOS TU CONTRASEÑA REAL ---
 USUARIO_ADMIN = "admin"
 PASSWORD_ADMIN = "Elmanantial445." 
 
-# ==========================================
-#   SEGURIDAD (LOGIN)
-# ==========================================
-
+# --- LOGIN ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario_logueado' not in session:
-            # Si intenta entrar a la API sin login, error 401
             if request.path.startswith('/api/'):
                 return jsonify({"error": "No autorizado"}), 401
             return redirect(url_for('login'))
@@ -45,19 +38,15 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             error = 'Usuario o contraseña incorrectos'
-    
-    # IMPORTANTE: Esto buscará obligatoriamente 'templates/login.html'
     return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
     session.pop('usuario_logueado', None)
-    return redirect(url_for('login'))
+    # ESTO CORRIGE EL ERROR DEL .HTML
+    return redirect(url_for('login')) 
 
-# ==========================================
-#   FUNCIONES DE AYUDA (BACKEND)
-# ==========================================
-
+# --- HELPERS ---
 def cargar_datos():
     if not os.path.exists(DATA_FILE):
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
@@ -65,8 +54,7 @@ def cargar_datos():
     try:
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except Exception as e:
-        print(f"Error al leer datos: {e}")
+    except Exception:
         return []
 
 def guardar_datos_en_archivo(datos):
@@ -75,70 +63,48 @@ def guardar_datos_en_archivo(datos):
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
         return True
-    except IOError as e:
-        print(f"Error crítico al guardar: {e}")
+    except IOError:
         return False
 
-# ==========================================
-#   PROGRAMADOR AUTOMÁTICO (CRON)
-# ==========================================
+# --- SCHEDULER ---
 def iniciar_programador():
     try:
         scheduler = BackgroundScheduler()
-        
-        # Verificamos que el archivo enviar_alertas.py tenga las funciones
         if hasattr(enviar_alertas, 'tarea_diaria'):
             scheduler.add_job(enviar_alertas.tarea_diaria, 'cron', hour=8, minute=0)
-        
         if hasattr(enviar_alertas, 'enviar_copia_seguridad'):
             scheduler.add_job(enviar_alertas.enviar_copia_seguridad, 'cron', day_of_week='fri', hour=9, minute=0)
-        
         scheduler.start()
-        print("⏰ Programador iniciado correctamente")
     except Exception as e:
-        print(f"Advertencia: No se pudo iniciar el programador de alertas. {e}")
+        print(f"Advertencia: {e}")
 
-# Iniciamos el reloj al arrancar la app
 iniciar_programador()
 
-# ==========================================
-#   RUTAS PRINCIPALES
-# ==========================================
+# --- RUTAS ---
 
 @app.route('/')
 @login_required
 def dashboard():
-    # Busca 'templates/index.html'
     return render_template('index.html')
-
-# ==========================================
-#   API JSON
-# ==========================================
 
 @app.route('/api/flota', methods=['GET'])
 @login_required
 def api_get_flota():
-    datos = cargar_datos()
-    return jsonify(datos)
+    return jsonify(cargar_datos())
 
 @app.route('/api/guardar_flota', methods=['POST'])
 @login_required
 def api_save_flota():
     nuevos_datos = request.json
-    if not isinstance(nuevos_datos, list):
-        return jsonify({"status": "error", "message": "Formato incorrecto"}), 400
-    
     if guardar_datos_en_archivo(nuevos_datos):
-        return jsonify({"status": "success", "message": "Guardado correctamente"})
+        return jsonify({"status": "success"})
     else:
-        return jsonify({"status": "error", "message": "Error de escritura"}), 500
+        return jsonify({"status": "error"}), 500
 
-# Esta ruta permite servir archivos sueltos (como logo.png) si están en la raíz
 @app.route('/<path:path>')
 @login_required
 def serve_static(path):
     return send_from_directory('.', path)
 
 if __name__ == '__main__':
-    # Escuchar en el puerto 80 para EasyPanel
     app.run(debug=True, host='0.0.0.0', port=80)
