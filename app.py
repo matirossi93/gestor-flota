@@ -19,7 +19,7 @@ USUARIOS = {
         "rol": "admin"  # Puede editar
     },
     "invitado": {
-        "pass": "semillero2025", 
+        "pass": "invitado", 
         "rol": "lector" # Solo ver
     }
 }
@@ -128,3 +128,4 @@ def serve_static(path): return send_from_directory('.', path)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=80)
+
