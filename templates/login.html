@@ -8,9 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        tailwind.config = { theme: { extend: { colors: {
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: {
             brand: { green: { DEFAULT: '#166534', dark: '#14532d', light: '#22c55e', muted: '#dcfce7' }, amber: '#f59e0b', cream: '#fefce8' }
         }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+    <script>
+        if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -93,7 +96,7 @@
             </button>
         </form>
 
-        <p class="text-center text-white/20 text-[10px] mt-8 tracking-wider">GESTOR FLOTA v3.0</p>
+        <p class="text-center text-white/20 text-[10px] mt-8 tracking-wider">GESTOR FLOTA v4.0</p>
     </div>
 
     <script>lucide.createIcons();</script>
