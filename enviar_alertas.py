@@ -1,7 +1,9 @@
 import datetime
 import json
 import os
-import smtplib 
+from dotenv import load_dotenv
+load_dotenv()
+import smtplib
 from email.mime.text import MIMEText 
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -10,15 +12,16 @@ from email.utils import formataddr
 from email.header import Header
 
 # --- RUTAS ---
-DATA_FILE = "data/flota_data.json"
-CONFIG_FILE = "data/config.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(BASE_DIR, "data", "flota_data.json")
+CONFIG_FILE = os.path.join(BASE_DIR, "data", "config.json")
 
 # --- SMTP ---
 SMTP_CONFIG = {
-    "SERVER": "smtp.gmail.com",
-    "PORT": 587,
-    "EMAIL": "datos@semilleroelmanantial.com",
-    "PASSWORD": "juaj iqmi saey zalp" 
+    "SERVER": os.environ.get("SMTP_SERVER", "smtp.gmail.com"),
+    "PORT": int(os.environ.get("SMTP_PORT", 587)),
+    "EMAIL": os.environ.get("SMTP_EMAIL", "datos@semilleroelmanantial.com"),
+    "PASSWORD": os.environ.get("SMTP_PASSWORD", "")
 }
 
 # --- CARGA ---

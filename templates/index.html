@@ -5,127 +5,335 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor Flota - El Manantial</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        tailwind.config = { theme: { extend: { colors: { brand: { beige: '#F3EAD6', green: { dark: '#1B4D3E', light: '#4CAF50', hover: '#143d30' }, orange: '#F59E0B', cream: '#FFFDF5' } }, fontFamily: { sans: ['Roboto', 'sans-serif'] } } } }
+        tailwind.config = { theme: { extend: { colors: {
+            brand: {
+                green: { DEFAULT: '#166534', dark: '#14532d', light: '#22c55e', hover: '#15803d', muted: '#dcfce7', subtle: '#f0fdf4' },
+                amber: { DEFAULT: '#f59e0b', light: '#fef3c7', dark: '#b45309' },
+                cream: '#fefce8', surface: '#f8fafc', card: '#ffffff'
+            }
+        }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
     </script>
     <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #F3EAD6; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16,1,0.3,1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .mobile-menu-open { display: flex !important; position: fixed; top: 0; left: 0; height: 100%; width: 100%; z-index: 50; }
+
+        /* Sidebar gradient */
+        .sidebar-bg { background: linear-gradient(180deg, #14532d 0%, #166534 100%); }
+
+        /* Cards hover */
+        .truck-card { transition: all 0.25s ease; }
+        .truck-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+
+        /* Status badges */
+        .badge-ok { background: #dcfce7; color: #166534; }
+        .badge-warn { background: #fef3c7; color: #b45309; }
+        .badge-danger { background: #fee2e2; color: #dc2626; animation: pulse-danger 2s infinite; }
+        @keyframes pulse-danger { 0%,100% { opacity: 1; } 50% { opacity: 0.8; } }
+
+        /* Toast */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            padding: 14px 20px; border-radius: 12px; color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 10px; min-width: 280px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .toast-success { background: linear-gradient(135deg, #166534, #22c55e); }
+        .toast-error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .toast-info { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+        .toast-exit { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100px); } }
+
+        /* Stat card */
+        .stat-card { transition: all 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); }
+
+        /* Scrollbar */
+        main::-webkit-scrollbar { width: 6px; }
+        main::-webkit-scrollbar-track { background: transparent; }
+        main::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        main::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* Vencimiento row */
+        .venc-row { transition: background 0.15s; }
+        .venc-row:hover { background: #f8fafc; }
     </style>
 </head>
-<body class="text-gray-800 h-screen overflow-hidden flex flex-col md:flex-row">
+<body class="bg-gray-50 text-gray-800 h-screen overflow-hidden flex flex-col md:flex-row">
 
-    <div class="md:hidden bg-brand-green-dark p-4 flex justify-between items-center shadow-md sticky top-0 z-30 w-full shrink-0">
-        <span class="text-white font-bold text-lg">El Manantial</span>
-        <button class="text-white" onclick="toggleSidebar()"><i data-lucide="menu" class="w-7 h-7"></i></button>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-brand-green-dark p-4 flex justify-between items-center shadow-lg sticky top-0 z-30 w-full shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-white rounded-lg p-0.5 w-8 h-8 overflow-hidden"><img src="/static/logo.png" class="w-full h-full object-cover"></div>
+            <span class="text-white font-bold">El Manantial</span>
+        </div>
+        <button class="text-white/80 hover:text-white" onclick="toggleSidebar()"><i data-lucide="menu" class="w-6 h-6"></i></button>
     </div>
 
-    <aside id="sidebar" class="w-full md:w-64 bg-brand-green-dark text-white hidden md:flex flex-col flex-shrink-0 shadow-xl z-40 md:relative">
-        <div class="md:hidden absolute top-4 right-4"><button onclick="toggleSidebar()" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-8 h-8"></i></button></div>
-        <div class="pt-8 px-6 mb-8 flex flex-col items-center md:items-start">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white rounded-full p-0.5 shadow-lg flex-shrink-0 overflow-hidden w-12 h-12 relative border-2 border-green-500/20"><img src="/static/logo.png" class="w-full h-full object-cover"></div>
-                <div class="flex flex-col justify-center"><p class="text-brand-orange text-[10px] uppercase font-bold">Semillero</p><h1 class="text-white text-lg font-bold mt-0.5">El Manantial <span class="text-[9px] font-normal opacity-70 ml-1">S.R.L</span></h1></div>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-full md:w-72 sidebar-bg text-white hidden md:flex flex-col flex-shrink-0 shadow-2xl z-40 md:relative">
+        <div class="md:hidden absolute top-4 right-4"><button onclick="toggleSidebar()" class="text-white/50 hover:text-white"><i data-lucide="x" class="w-7 h-7"></i></button></div>
+
+        <div class="pt-8 px-6 mb-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-white rounded-xl p-0.5 shadow-lg w-14 h-14 overflow-hidden ring-2 ring-white/20">
+                    <img src="/static/logo.png" class="w-full h-full object-cover rounded-lg">
+                </div>
+                <div>
+                    <p class="text-green-300 text-[10px] uppercase tracking-[0.2em] font-semibold">Semillero</p>
+                    <h1 class="text-white text-xl font-extrabold tracking-tight">El Manantial</h1>
+                    <p class="text-white/30 text-[10px]">S.R.L</p>
+                </div>
             </div>
         </div>
-        <nav class="flex-1 px-4 space-y-2 mt-4 w-full">
-            <button onclick="showDashboard()" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-brand-green-light text-white font-semibold"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Dashboard</span></button>
-            <button onclick="openNewUnitModal()" class="admin-only w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors"><i data-lucide="plus-circle" class="w-5 h-5"></i><span>Nueva Unidad</span></button>
-            <button onclick="showSettings()" class="admin-only w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-brand-green-hover transition-colors"><i data-lucide="settings" class="w-5 h-5"></i><span>Configuración</span></button>
+
+        <div class="px-4 mb-4">
+            <div class="h-px bg-white/10"></div>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-1">
+            <button onclick="showDashboard()" id="nav-dashboard" class="nav-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 text-white font-semibold text-sm">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Dashboard</span>
+            </button>
+            <button onclick="openNewUnitModal()" class="admin-only nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white transition-all text-sm">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i><span>Nueva Unidad</span>
+            </button>
+            <button onclick="showSettings()" class="admin-only nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:bg-white/5 hover:text-white transition-all text-sm">
+                <i data-lucide="settings" class="w-5 h-5"></i><span>Configuración</span>
+            </button>
         </nav>
-        <div class="p-4 border-t border-brand-green-hover w-full mt-auto">
-            <button onclick="location.href='/logout'" class="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"><i data-lucide="log-out" class="w-5 h-5"></i><span>Cerrar Sesión</span></button>
-            <p class="text-center text-xs text-gray-500 mt-4">v2.6 Final | Rol: {{ rol|upper }}</p>
+
+        <div class="p-4 border-t border-white/10 mt-auto">
+            <div class="flex items-center gap-3 px-4 py-2 mb-2">
+                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                    <i data-lucide="user" class="w-4 h-4 text-white/60"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-white/90">{{ rol|capitalize }}</p>
+                    <p class="text-[10px] text-white/30">{{ rol|upper }}</p>
+                </div>
+            </div>
+            <button onclick="location.href='/logout'" class="w-full flex items-center gap-3 px-4 py-2.5 text-red-300/70 hover:bg-red-500/10 hover:text-red-300 rounded-xl transition-all text-sm">
+                <i data-lucide="log-out" class="w-4 h-4"></i><span>Cerrar Sesión</span>
+            </button>
+            <p class="text-center text-[10px] text-white/15 mt-4">v3.0</p>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto relative bg-brand-beige w-full h-full">
-        <div id="view-dashboard" class="p-4 md:p-10 max-w-7xl mx-auto fade-in pb-20">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-green-dark flex justify-between"><div><p class="text-gray-500 text-sm">Total</p><h3 id="stat-total" class="text-3xl font-bold">...</h3></div><div class="bg-brand-beige p-3 rounded-full"><i data-lucide="truck" class="w-6 h-6 text-brand-green-dark"></i></div></div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-brand-orange flex justify-between"><div><p class="text-gray-500 text-sm">Atención</p><h3 id="stat-attention" class="text-3xl font-bold">...</h3></div><div class="bg-orange-100 p-3 rounded-full"><i data-lucide="alert-triangle" class="w-6 h-6 text-brand-orange"></i></div></div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex justify-between"><div><p class="text-gray-500 text-sm">Operativos</p><h3 id="stat-ok" class="text-3xl font-bold">...</h3></div><div class="bg-green-100 p-3 rounded-full"><i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i></div></div>
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto relative bg-gray-50 w-full h-full">
+
+        <!-- ===== DASHBOARD VIEW ===== -->
+        <div id="view-dashboard" class="p-4 md:p-8 lg:p-10 max-w-7xl mx-auto fade-in pb-20">
+            <!-- Header -->
+            <div class="mb-8">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard</h2>
+                <p class="text-gray-400 text-sm mt-1">Estado general de la flota</p>
             </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5 mb-8">
+                <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-brand-green-subtle flex items-center justify-center"><i data-lucide="truck" class="w-6 h-6 text-brand-green"></i></div>
+                    <div><p class="text-gray-400 text-xs font-medium uppercase tracking-wider">Total</p><h3 id="stat-total" class="text-3xl font-extrabold text-gray-900">...</h3></div>
+                </div>
+                <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-6 h-6 text-brand-amber"></i></div>
+                    <div><p class="text-gray-400 text-xs font-medium uppercase tracking-wider">Atención</p><h3 id="stat-attention" class="text-3xl font-extrabold text-gray-900">...</h3></div>
+                </div>
+                <div class="stat-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center"><i data-lucide="check-circle" class="w-6 h-6 text-green-500"></i></div>
+                    <div><p class="text-gray-400 text-xs font-medium uppercase tracking-wider">Operativos</p><h3 id="stat-ok" class="text-3xl font-extrabold text-gray-900">...</h3></div>
+                </div>
+            </div>
+
+            <!-- Search -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-brand-green-dark">Estado de Flota</h2>
-                <div class="relative w-full md:w-96"><input type="text" id="search-input" placeholder="Buscar..." class="w-full pl-10 pr-4 py-3 rounded-lg border" oninput="renderTruckGrid()" /><i data-lucide="search" class="absolute left-3 top-3.5 w-5 h-5 text-gray-400"></i></div>
+                <h3 class="text-lg font-bold text-gray-700">Unidades</h3>
+                <div class="relative w-full md:w-96">
+                    <i data-lucide="search" class="absolute left-4 top-3.5 w-4 h-4 text-gray-300"></i>
+                    <input type="text" id="search-input" placeholder="Buscar por patente o descripción..." class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-green-light/30 focus:border-brand-green-light text-sm" oninput="renderDashboard()" />
+                </div>
             </div>
-            <div id="trucks-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"><div class="col-span-full text-center py-10 text-gray-500">Cargando...</div></div>
+
+            <!-- Grid -->
+            <div id="trucks-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div class="col-span-full text-center py-16 text-gray-400"><i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto mb-3 text-gray-300"></i>Cargando flota...</div>
+            </div>
         </div>
 
-        <div id="view-detail" class="hidden p-4 md:p-10 max-w-6xl mx-auto fade-in pb-20">
-            <button onclick="showDashboard()" class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 font-medium"><i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver</button>
+        <!-- ===== DETAIL VIEW ===== -->
+        <div id="view-detail" class="hidden p-4 md:p-8 lg:p-10 max-w-6xl mx-auto fade-in pb-20">
+            <button onclick="showDashboard()" class="flex items-center gap-2 text-gray-400 hover:text-brand-green mb-8 font-medium text-sm transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Dashboard
+            </button>
+
             <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Left Column -->
                 <div class="lg:w-2/3 space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div class="bg-brand-cream px-6 py-4 border-b"><h3 class="font-bold text-lg text-brand-green-dark">Datos Principales</h3></div>
-                        <div class="p-6"><form onsubmit="handleGeneralUpdate(event)" class="grid md:grid-cols-2 gap-4">
-                            <div><label class="text-sm">Patente</label><input id="input-patente" class="w-full px-3 py-2 border rounded uppercase" /></div>
-                            <div><label class="text-sm">Descripción</label><input id="input-descripcion" class="w-full px-3 py-2 border rounded" /></div>
-                            <div class="md:col-span-2 text-right"><button type="submit" class="admin-only bg-brand-green-dark text-white px-4 py-2 rounded hover:bg-brand-green-light">Guardar Cambios</button></div>
-                        </form></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border-2 border-brand-green-light/20">
-                        <div class="bg-brand-green-light text-white px-6 py-4"><h3 class="font-bold text-lg">Registrar Service</h3></div>
-                        <div class="p-6"><form onsubmit="handleServiceUpdate(event)" class="grid md:grid-cols-2 gap-4">
-                            <div><label class="text-sm">Fecha</label><input type="date" id="input-service-fecha" required class="w-full px-3 py-2 border rounded" /></div>
-                            <div><label class="text-sm">KM</label><input type="number" id="input-service-km" required class="w-full px-3 py-2 border rounded" /></div>
-                            <div class="md:col-span-2"><button type="submit" class="admin-only w-full bg-brand-green-light hover:bg-green-600 text-white font-bold py-2 rounded shadow">Registrar</button></div>
-                        </form></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border">
-                        <div class="bg-brand-cream px-6 py-4 border-b flex justify-between"><h3 class="font-bold text-lg text-brand-green-dark">Historial</h3><button onclick="openHistoryModal()" class="admin-only text-xs border border-brand-green-dark text-brand-green-dark px-2 py-1 rounded hover:bg-brand-green-dark hover:text-white">+ Evento</button></div>
-                        <ul id="history-list" class="divide-y divide-gray-100"></ul>
-                    </div>
-                </div>
-                <div class="lg:w-1/3 space-y-6">
-                    <div class="bg-white rounded-xl shadow-md border">
-                        <div class="bg-brand-green-dark text-white px-6 py-4 rounded-t-xl"><h3 class="font-bold">Estado Actual</h3></div>
-                        <div class="p-6 space-y-6">
-                            <div class="space-y-2"><label class="flex justify-between text-sm font-medium"><span>KM</span><span id="status-km-label" class="font-bold"></span></label><div class="flex gap-2"><input type="number" id="input-km-actual" class="flex-1 border rounded px-3"><button onclick="handleGeneralUpdate(event)" class="admin-only bg-gray-100 border px-3 rounded"><i data-lucide="save" class="w-4 h-4"></i></button></div></div>
-                            <hr class="border-gray-100" /><div id="vencimientos-container" class="space-y-4"></div>
-                            <div class="pt-4 border-t bg-gray-50 p-3 rounded admin-only"><p class="text-xs font-bold text-gray-500 mb-2">AGREGAR VENCIMIENTO</p><div class="flex gap-2 mb-2"><input id="new-venc-name" placeholder="Nombre" class="flex-1 border rounded px-2 py-1 text-xs"><input type="date" id="new-venc-date" class="flex-1 border rounded px-2 py-1 text-xs"></div><button onclick="addCustomExpiration()" class="w-full bg-white border text-xs font-bold py-1 rounded">Agregar</button></div>
+                    <!-- General Data -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-4 h-4 text-brand-green"></i>
+                            <h3 class="font-bold text-gray-900">Datos Principales</h3>
+                        </div>
+                        <div class="p-6">
+                            <form onsubmit="handleGeneralUpdate(event)" class="grid md:grid-cols-2 gap-4">
+                                <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Patente</label><input id="input-patente" class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl uppercase text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30 focus:border-brand-green-light" /></div>
+                                <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Descripción</label><input id="input-descripcion" class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30 focus:border-brand-green-light" /></div>
+                                <div class="md:col-span-2 flex justify-end"><button type="submit" class="admin-only bg-brand-green hover:bg-brand-green-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i>Guardar</button></div>
+                            </form>
                         </div>
                     </div>
-                    <div class="border border-red-200 bg-red-50 rounded-xl p-4 flex justify-between items-center admin-only"><span class="text-red-800 text-sm font-medium">Eliminar Unidad</span><button onclick="deleteTruck()" class="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm flex items-center"><i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Eliminar</button></div>
+
+                    <!-- Service -->
+                    <div class="bg-white rounded-2xl shadow-sm border-2 border-brand-green-light/20 overflow-hidden">
+                        <div class="bg-gradient-to-r from-brand-green to-brand-green-hover px-6 py-4 flex items-center gap-2">
+                            <i data-lucide="wrench" class="w-4 h-4 text-white/80"></i>
+                            <h3 class="font-bold text-white">Registrar Service</h3>
+                        </div>
+                        <div class="p-6">
+                            <form onsubmit="handleServiceUpdate(event)" class="grid md:grid-cols-2 gap-4">
+                                <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Fecha</label><input type="date" id="input-service-fecha" required class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /></div>
+                                <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Kilómetros</label><input type="number" id="input-service-km" required class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /></div>
+                                <div class="md:col-span-2"><button type="submit" class="admin-only w-full bg-brand-green-light hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i>Registrar Service</button></div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- History -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <div class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-brand-green"></i><h3 class="font-bold text-gray-900">Historial</h3></div>
+                            <button onclick="openHistoryModal()" class="admin-only text-xs bg-brand-green-subtle text-brand-green px-3 py-1.5 rounded-lg font-semibold hover:bg-brand-green-muted transition-colors flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i>Evento</button>
+                        </div>
+                        <ul id="history-list" class="divide-y divide-gray-50 max-h-80 overflow-y-auto"></ul>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="lg:w-1/3 space-y-6">
+                    <!-- Status Panel -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 flex items-center gap-2">
+                            <i data-lucide="gauge" class="w-4 h-4 text-brand-green-light"></i>
+                            <h3 class="font-bold text-white">Estado Actual</h3>
+                        </div>
+                        <div class="p-5 space-y-5">
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <label class="flex justify-between text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                                    <span>Kilómetros</span><span id="status-km-label" class="font-bold"></span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="input-km-actual" class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30">
+                                    <button onclick="handleGeneralUpdate(event)" class="admin-only bg-brand-green text-white px-3 rounded-xl hover:bg-brand-green-hover transition-colors"><i data-lucide="save" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="h-px bg-gray-100"></div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Vencimientos</h4>
+                            <div id="vencimientos-container" class="space-y-3"></div>
+
+                            <div class="pt-3 border-t border-gray-100 admin-only">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Agregar Vencimiento</p>
+                                <div class="flex gap-2 mb-2">
+                                    <input id="new-venc-name" placeholder="Nombre" class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-green-light/30">
+                                    <input type="date" id="new-venc-date" class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-green-light/30">
+                                </div>
+                                <button onclick="addCustomExpiration()" class="w-full bg-gray-50 border border-gray-200 text-xs font-bold py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-1">
+                                    <i data-lucide="plus" class="w-3 h-3"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete -->
+                    <div class="admin-only border border-red-200 bg-red-50 rounded-2xl p-4 flex justify-between items-center">
+                        <span class="text-red-700 text-sm font-medium">Eliminar unidad</span>
+                        <button onclick="deleteTruck()" class="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="view-settings" class="hidden p-4 md:p-10 max-w-3xl mx-auto fade-in pb-20">
-            <button onclick="showDashboard()" class="flex items-center text-brand-green-dark hover:text-brand-orange mb-6 font-medium"><i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Volver</button>
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="bg-brand-green-dark text-white px-8 py-6"><h2 class="text-2xl font-bold flex items-center"><i data-lucide="settings" class="w-8 h-8 mr-3 text-brand-orange"></i> Configuración</h2></div>
-                <div class="p-6 md:p-8 space-y-8"><div class="grid grid-cols-1 gap-6"><div><label class="block text-sm font-bold text-gray-700 mb-2">Días para aviso</label><input type="number" id="config-dias" class="w-full px-4 py-2 border rounded-lg" /></div><div><label class="block text-sm font-bold text-gray-700 mb-2">Emails Alertas</label><input type="text" id="config-email" class="w-full px-4 py-2 border rounded-lg" /></div></div><div class="pt-6 border-t border-gray-100 flex justify-end"><button onclick="saveConfig()" class="bg-brand-green-light hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-md flex items-center"><i data-lucide="save" class="w-5 h-5 mr-2"></i> Guardar</button></div></div>
+        <!-- ===== SETTINGS VIEW ===== -->
+        <div id="view-settings" class="hidden p-4 md:p-8 lg:p-10 max-w-3xl mx-auto fade-in pb-20">
+            <button onclick="showDashboard()" class="flex items-center gap-2 text-gray-400 hover:text-brand-green mb-8 font-medium text-sm transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Dashboard
+            </button>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-6">
+                    <h2 class="text-2xl font-extrabold text-white flex items-center gap-3"><i data-lucide="settings" class="w-7 h-7 text-brand-green-light"></i>Configuración</h2>
+                    <p class="text-white/40 text-sm mt-1">Ajustes de alertas y notificaciones</p>
+                </div>
+                <div class="p-6 md:p-8 space-y-6">
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Días de anticipación para avisos</label>
+                        <input type="number" id="config-dias" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30 focus:border-brand-green-light" />
+                        <p class="text-xs text-gray-400 mt-1">Cuántos días antes del vencimiento enviar el primer aviso</p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Emails para alertas</label>
+                        <input type="text" id="config-email" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30 focus:border-brand-green-light" />
+                        <p class="text-xs text-gray-400 mt-1">Separar con comas para múltiples destinatarios</p>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100 flex justify-end">
+                        <button onclick="saveConfig()" class="bg-brand-green hover:bg-brand-green-hover text-white px-6 py-3 rounded-xl font-bold shadow-sm flex items-center gap-2 transition-colors">
+                            <i data-lucide="save" class="w-5 h-5"></i> Guardar Configuración
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="modal-new-unit" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 fade-in">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-                <div class="bg-brand-green-dark px-6 py-4 flex justify-between items-center"><h3 class="text-white font-bold text-lg">Nueva Unidad</h3><button onclick="closeModal('modal-new-unit')" class="text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+        <!-- ===== MODALS ===== -->
+        <!-- New Unit Modal -->
+        <div id="modal-new-unit" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 fade-in">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-brand-green to-brand-green-hover px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-white font-bold text-lg flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i>Nueva Unidad</h3>
+                    <button onclick="closeModal('modal-new-unit')" class="text-white/60 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
                 <form id="form-new-truck" onsubmit="handleNewUnit(event)" class="p-6 space-y-4">
-                    <div><label class="text-sm">Patente</label><input id="new-patente" required class="w-full px-3 py-2 border rounded uppercase" /></div>
-                    <div><label class="text-sm">Descripción</label><input id="new-descripcion" required class="w-full px-3 py-2 border rounded" /></div>
-                    <div><label class="text-sm">KM</label><input id="new-km" required type="number" class="w-full px-3 py-2 border rounded" /></div>
-                    <div class="pt-4 flex justify-end space-x-3"><button type="button" onclick="closeModal('modal-new-unit')" class="px-4 py-2 text-gray-600 bg-gray-100 rounded">Cancelar</button><button type="submit" class="px-4 py-2 bg-brand-green-light text-white font-bold rounded">Guardar</button></div>
+                    <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Patente</label><input id="new-patente" required class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl uppercase text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /></div>
+                    <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Descripción</label><input id="new-descripcion" required class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /></div>
+                    <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Kilómetros actuales</label><input id="new-km" required type="number" class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /></div>
+                    <div class="pt-4 flex justify-end gap-3">
+                        <button type="button" onclick="closeModal('modal-new-unit')" class="px-5 py-2.5 text-gray-500 bg-gray-100 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Cancelar</button>
+                        <button type="submit" class="px-5 py-2.5 bg-brand-green-light text-white font-bold rounded-xl text-sm hover:bg-green-600 transition-colors flex items-center gap-2"><i data-lucide="check" class="w-4 h-4"></i>Crear</button>
+                    </div>
                 </form>
             </div>
         </div>
 
-        <div id="modal-history" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 fade-in">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-                <div class="bg-brand-green-dark px-6 py-4 flex justify-between items-center"><h3 id="hist-modal-title" class="text-white font-bold text-lg">Evento</h3><button onclick="closeModal('modal-history')" class="text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+        <!-- History Modal -->
+        <div id="modal-history" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 fade-in">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 flex justify-between items-center">
+                    <h3 id="hist-modal-title" class="text-white font-bold text-lg flex items-center gap-2"><i data-lucide="calendar-plus" class="w-5 h-5"></i>Evento</h3>
+                    <button onclick="closeModal('modal-history')" class="text-white/60 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
                 <form onsubmit="handleHistorySubmit(event)" class="p-6 space-y-4">
                     <input type="hidden" id="hist-index" value="-1">
-                    <div><label class="text-sm">Fecha</label><input id="hist-fecha" required type="date" class="w-full px-3 py-2 border rounded" /></div>
-                    <div><label class="text-sm">Tipo</label><input id="hist-tipo" required list="tipos-hist" class="w-full px-3 py-2 border rounded" /><datalist id="tipos-hist"><option value="Service"><option value="Reparación"><option value="Documentación"></datalist></div>
-                    <div><label class="text-sm">Detalle</label><textarea id="hist-detalle" required class="w-full px-3 py-2 border rounded h-24"></textarea></div>
-                    <div class="pt-4 flex justify-end space-x-3"><button type="button" onclick="closeModal('modal-history')" class="px-4 py-2 text-gray-600 bg-gray-100 rounded">Cancelar</button><button type="submit" class="px-4 py-2 bg-brand-green-light text-white font-bold rounded">Guardar</button></div>
+                    <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Fecha</label><input id="hist-fecha" required type="date" class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /></div>
+                    <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Tipo</label><input id="hist-tipo" required list="tipos-hist" class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" /><datalist id="tipos-hist"><option value="Service"><option value="Reparación"><option value="Documentación"></datalist></div>
+                    <div><label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Detalle</label><textarea id="hist-detalle" required class="w-full mt-1 px-4 py-2.5 border border-gray-200 rounded-xl h-24 text-sm focus:outline-none focus:ring-2 focus:ring-brand-green-light/30"></textarea></div>
+                    <div class="pt-4 flex justify-end gap-3">
+                        <button type="button" onclick="closeModal('modal-history')" class="px-5 py-2.5 text-gray-500 bg-gray-100 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">Cancelar</button>
+                        <button type="submit" class="px-5 py-2.5 bg-brand-green text-white font-bold rounded-xl text-sm hover:bg-brand-green-hover transition-colors flex items-center gap-2"><i data-lucide="check" class="w-4 h-4"></i>Guardar</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -133,18 +341,31 @@
 
     <script>
         let FLOTA_DATA = []; let CONFIG = { diasAviso: 30 }; let selectedTruckId = null;
-        const USER_ROLE = "{{ rol }}"; 
+        const USER_ROLE = "{{ rol }}";
         const API_FLOTA = '/api/flota'; const API_CONFIG = '/api/config';
 
+        // --- TOAST SYSTEM ---
+        function toast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const icons = { success: 'check-circle', error: 'alert-circle', info: 'info' };
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.innerHTML = `<i data-lucide="${icons[type] || 'info'}" class="w-5 h-5 flex-shrink-0"></i><span>${message}</span>`;
+            container.appendChild(t);
+            lucide.createIcons();
+            setTimeout(() => { t.classList.add('toast-exit'); setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        // --- INIT ---
         window.onload = function() { lucide.createIcons(); cargarTodo(); applyPermissions(); };
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('hidden'); document.getElementById('sidebar').classList.toggle('mobile-menu-open'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        
+
         function applyPermissions() {
             if (USER_ROLE !== 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('input').forEach(el => { if(el.id !== 'search-input') el.disabled = true; });
+                document.querySelectorAll('input, textarea').forEach(el => { if(el.id !== 'search-input') el.disabled = true; });
             }
         }
 
@@ -161,44 +382,54 @@
                     historial: c.historial || []
                 }));
                 renderDashboard();
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error(e); toast('Error cargando datos', 'error'); }
         }
 
         async function guardarEnServidor() {
-            if(USER_ROLE !== 'admin') return alert("Modo Lectura: No tienes permisos.");
-            try { await fetch('/api/guardar_flota', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(FLOTA_DATA)}); return true; } catch(e) { return false; }
+            if(USER_ROLE !== 'admin') { toast("Modo Lectura: No tienes permisos", "error"); return false; }
+            try {
+                const res = await fetch('/api/guardar_flota', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(FLOTA_DATA)});
+                if(res.ok) return true;
+                toast("Error al guardar", "error"); return false;
+            } catch(e) { toast("Error de conexión", "error"); return false; }
         }
 
-        // --- LOGICA DE ESTADOS Y COLORES ---
-        const checkDate = (d) => { 
-            if(!d) return {st:'ERROR', msg:'S/D'}; 
-            const diff = Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/86400000); 
+        // --- STATUS LOGIC ---
+        const checkDate = (d) => {
+            if(!d) return {st:'ERROR', msg:'S/D'};
+            const diff = Math.ceil((new Date(d)-new Date().setHours(0,0,0,0))/86400000);
             if (diff < 0) return {st:'DANGER', msg: `VENCIDO (${Math.abs(diff)} d)`};
             if (diff <= (CONFIG.diasAviso || 30)) return {st:'WARNING', msg: `Vence en ${diff} d`};
-            return {st:'OK', msg:'OK'}; 
+            return {st:'OK', msg:'OK'};
         };
 
-        const checkService = (c) => { 
-            const diff = (c.service.ultimo_km + c.service.intervalo_km) - c.km_actual; 
+        const checkService = (c) => {
+            const diff = (c.service.ultimo_km + c.service.intervalo_km) - c.km_actual;
             if (diff < 0) return {st:'DANGER', msg: `VENCIDO (${Math.abs(diff)} km)`};
             if (diff <= 2000) return {st:'WARNING', msg: `Falta ${diff} km`};
-            return {st:'OK', msg:'OK'}; 
+            return {st:'OK', msg:'OK'};
         };
 
+        const badgeCls = (s) => {
+            if (s === 'OK') return 'badge-ok';
+            if (s === 'WARNING') return 'badge-warn';
+            if (s === 'DANGER') return 'badge-danger';
+            return 'bg-gray-100 text-gray-500';
+        };
         const txtCls = (s) => {
             if (s === 'OK') return 'text-green-600 font-bold';
-            if (s === 'WARNING') return 'text-yellow-600 font-bold';
+            if (s === 'WARNING') return 'text-amber-600 font-bold';
             if (s === 'DANGER') return 'text-red-600 font-bold';
-            return 'text-gray-500';
+            return 'text-gray-400';
         };
 
+        // --- DASHBOARD RENDER ---
         function renderDashboard() {
             const grid = document.getElementById('trucks-grid'); grid.innerHTML = '';
             const term = document.getElementById('search-input').value.toLowerCase();
-            
+
             let att = 0;
             FLOTA_DATA.forEach(c => {
-                // Lógica Corregida: Solo cuenta DANGER como Atención Requerida
                 const srvRed = checkService(c).st === 'DANGER';
                 const docRed = Object.values(c.vencimientos).some(v => v && checkDate(v).st === 'DANGER');
                 if(srvRed || docRed) att++;
@@ -207,63 +438,116 @@
             document.getElementById('stat-attention').innerText = att;
             document.getElementById('stat-ok').innerText = FLOTA_DATA.length - att;
 
-            FLOTA_DATA.filter(c => c.patente.toLowerCase().includes(term) || c.descripcion.toLowerCase().includes(term)).forEach(c => {
+            const filtered = FLOTA_DATA.filter(c => c.patente.toLowerCase().includes(term) || c.descripcion.toLowerCase().includes(term));
+
+            if(filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400"><i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 text-gray-300"></i><p>No se encontraron unidades</p></div>';
+                lucide.createIcons(); return;
+            }
+
+            filtered.forEach(c => {
                 let vHtml = '';
                 Object.entries(c.vencimientos).forEach(([k,v]) => {
                     if(!v) return;
                     const st = checkDate(v);
-                    // Filtro Comanry VISIBLE
-                    let label = k.replace('filtro_comanry', 'F. Comanry').replace(/_/g,' ').toUpperCase();
-                    vHtml += `<div class="flex justify-between text-xs"><span class="capitalize text-gray-500 w-24 truncate">${label}</span><span class="${txtCls(st.st)}">${st.msg}</span></div>`;
+                    let label = k.replace('filtro_comanry', 'F. Comanry').replace(/_/g,' ');
+                    vHtml += `<div class="venc-row flex justify-between items-center py-1.5 px-2 rounded-lg text-xs">
+                        <span class="text-gray-500 capitalize truncate mr-2">${label}</span>
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap ${badgeCls(st.st)}">${st.msg}</span>
+                    </div>`;
                 });
-                
+
                 const sv = checkService(c);
-                const svBadge = sv.st === 'OK' ? 'bg-green-100 text-green-800' : sv.st === 'WARNING' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+                const worstState = [sv, ...Object.values(c.vencimientos).filter(v=>v).map(v=>checkDate(v))].some(s=>s.st==='DANGER') ? 'DANGER' : [sv, ...Object.values(c.vencimientos).filter(v=>v).map(v=>checkDate(v))].some(s=>s.st==='WARNING') ? 'WARNING' : 'OK';
+                const borderColor = worstState === 'DANGER' ? 'border-l-red-500' : worstState === 'WARNING' ? 'border-l-amber-400' : 'border-l-green-400';
 
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer border overflow-hidden";
+                card.className = `truck-card bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 ${borderColor} overflow-hidden cursor-pointer`;
                 card.onclick = () => showDetail(c.id);
-                card.innerHTML = `<div class="bg-brand-cream p-4 border-b flex justify-between"><div><h3 class="font-bold text-brand-green-dark">${c.patente}</h3><p class="text-xs text-gray-500">${c.descripcion}</p></div><span class="bg-white text-xs px-2 py-1 rounded border">ID: ${c.id}</span></div><div class="p-4 space-y-3"><div class="flex justify-between items-center"><span class="text-sm font-medium">KM</span><span class="font-mono font-bold text-lg">${formatNumber(c.km_actual)}</span></div><div class="flex justify-between items-center"><span class="text-sm font-medium">Service</span><span class="text-xs px-2 py-0.5 rounded font-bold ${svBadge}">${sv.msg}</span></div><div class="border-t pt-2 space-y-1">${vHtml}</div></div><div class="bg-gray-50 p-2 text-center text-xs font-bold text-brand-green-light">VER DETALLES &rarr;</div>`;
+                card.innerHTML = `
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-extrabold text-gray-900 text-lg tracking-tight">${c.patente}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5">${c.descripcion}</p>
+                            </div>
+                            <span class="text-[10px] px-2 py-1 rounded-lg bg-gray-100 text-gray-400 font-mono">#${c.id}</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3 bg-gray-50 rounded-xl px-3 py-2">
+                            <div class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-gray-400"></i><span class="text-xs text-gray-500">KM</span></div>
+                            <span class="font-mono font-bold text-lg text-gray-900">${formatNumber(c.km_actual)}</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-medium text-gray-500 flex items-center gap-1"><i data-lucide="wrench" class="w-3 h-3"></i>Service</span>
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${badgeCls(sv.st)}">${sv.msg}</span>
+                        </div>
+                        ${vHtml ? `<div class="border-t border-gray-100 pt-2 mt-2 space-y-0.5">${vHtml}</div>` : ''}
+                    </div>
+                    <div class="bg-gray-50 border-t border-gray-100 px-5 py-2.5 text-center">
+                        <span class="text-xs font-bold text-brand-green flex items-center justify-center gap-1">Ver detalles <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                    </div>`;
                 grid.appendChild(card);
             });
             lucide.createIcons();
         }
 
+        // --- DETAIL VIEW ---
         function renderDetailView() {
             const c = FLOTA_DATA.find(x => x.id === selectedTruckId);
             document.getElementById('input-patente').value = c.patente;
             document.getElementById('input-descripcion').value = c.descripcion;
             document.getElementById('input-km-actual').value = c.km_actual;
-            
+
             const hl = document.getElementById('history-list');
-            hl.innerHTML = c.historial.length ? '' : '<p class="p-4 text-gray-400 text-sm">Sin historial.</p>';
+            hl.innerHTML = c.historial.length ? '' : '<p class="p-6 text-gray-300 text-sm text-center">Sin historial registrado</p>';
             c.historial.forEach((h, idx) => {
-                let btns = USER_ROLE === 'admin' ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100"><button onclick="openHistoryModal(${idx})" class="text-blue-500"><i data-lucide="pencil" class="w-3 h-3"></i></button><button onclick="deleteHistoryItem(${idx})" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>` : '';
-                hl.innerHTML += `<li class="p-4 border-b group flex justify-between items-start"><div class="flex-1"><div class="flex justify-between text-xs font-bold text-brand-green-dark"><span>${h.tipo}</span><span>${h.fecha}</span></div><p class="text-sm">${h.detalle}</p></div>${btns}</li>`;
+                const typeColors = { 'Service': 'bg-green-100 text-green-700', 'Reparación': 'bg-red-100 text-red-700', 'Documentación': 'bg-blue-100 text-blue-700' };
+                const typeClass = typeColors[h.tipo] || 'bg-gray-100 text-gray-700';
+                let btns = USER_ROLE === 'admin' ? `<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="openHistoryModal(${idx})" class="text-gray-400 hover:text-blue-500 p-1"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="deleteHistoryItem(${idx})" class="text-gray-400 hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>` : '';
+                hl.innerHTML += `<li class="px-5 py-3 group flex justify-between items-start hover:bg-gray-50 transition-colors">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${typeClass}">${h.tipo}</span>
+                            <span class="text-xs text-gray-400">${h.fecha}</span>
+                        </div>
+                        <p class="text-sm text-gray-600">${h.detalle}</p>
+                    </div>${btns}
+                </li>`;
             });
 
             const vc = document.getElementById('vencimientos-container'); vc.innerHTML = '';
             Object.entries(c.vencimientos).forEach(([k, v]) => {
                 const st = checkDate(v);
-                let delBtn = USER_ROLE === 'admin' ? `<button onclick="deleteExpiration('${k}')" class="text-red-300 hover:text-red-500 ml-2"><i data-lucide="trash" class="w-3 h-3"></i></button>` : '';
-                // Input con mensaje de estado al lado
-                let label = k.replace('filtro_comanry', 'F. Comanry').replace(/_/g,' ').toUpperCase();
-                vc.innerHTML += `<div><label class="flex justify-between text-xs font-bold text-gray-500 mb-1"><div class="flex items-center"><span>${label}</span>${delBtn}</div><span class="${txtCls(st.st)}">${st.msg}</span></label><div class="flex gap-2"><input type="date" id="venc-${k}" value="${v}" class="flex-1 border rounded px-2 py-1 text-sm" ${USER_ROLE!=='admin'?'disabled':''}><button onclick="handleGeneralUpdate(event)" class="admin-only bg-gray-100 px-2 rounded"><i data-lucide="save" class="w-3 h-3"></i></button></div></div>`;
+                let delBtn = USER_ROLE === 'admin' ? `<button onclick="deleteExpiration('${k}')" class="text-gray-300 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>` : '';
+                let label = k.replace('filtro_comanry', 'F. Comanry').replace(/_/g,' ');
+                vc.innerHTML += `<div class="bg-gray-50 rounded-xl p-3">
+                    <label class="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                        <div class="flex items-center gap-1.5"><span>${label}</span>${delBtn}</div>
+                        <span class="px-2 py-0.5 rounded-md ${badgeCls(st.st)}">${st.msg}</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="date" id="venc-${k}" value="${v}" class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-green-light/30" ${USER_ROLE!=='admin'?'disabled':''}>
+                        <button onclick="handleGeneralUpdate(event)" class="admin-only bg-white border border-gray-200 px-2 rounded-lg hover:bg-gray-100 transition-colors"><i data-lucide="save" class="w-3 h-3 text-gray-500"></i></button>
+                    </div>
+                </div>`;
             });
-            
+
             const ss = checkService(c);
             document.getElementById('status-km-label').innerText = ss.msg;
-            document.getElementById('status-km-label').className = txtCls(ss.st);
+            document.getElementById('status-km-label').className = txtCls(ss.st) + ' text-sm';
             applyPermissions();
             lucide.createIcons();
         }
 
-        // --- STANDARD HANDLERS ---
+        // --- HANDLERS ---
         const formatNumber = (n) => new Intl.NumberFormat('es-AR').format(n||0);
         function showDashboard() { document.getElementById('view-dashboard').classList.remove('hidden'); document.getElementById('view-detail').classList.add('hidden'); document.getElementById('view-settings').classList.add('hidden'); renderDashboard(); }
         function showDetail(id) { selectedTruckId = parseInt(id); document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-detail').classList.remove('hidden'); renderDetailView(); }
         function showSettings() { document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-settings').classList.remove('hidden'); }
-        
+
         async function handleGeneralUpdate(e) {
             if(e) e.preventDefault();
             const c = FLOTA_DATA.find(x => x.id === selectedTruckId);
@@ -271,55 +555,74 @@
             c.descripcion = document.getElementById('input-descripcion').value;
             c.km_actual = parseInt(document.getElementById('input-km-actual').value);
             document.querySelectorAll('input[id^="venc-"]').forEach(i => c.vencimientos[i.id.replace('venc-','')] = i.value);
-            await guardarEnServidor(); alert("Guardado."); renderDetailView();
+            if(await guardarEnServidor()) { toast("Cambios guardados"); renderDetailView(); }
         }
-        
+
         async function handleServiceUpdate(e) {
             e.preventDefault();
             const c = FLOTA_DATA.find(x => x.id === selectedTruckId);
             const f = document.getElementById('input-service-fecha').value;
             const k = parseInt(document.getElementById('input-service-km').value);
             if(k > c.km_actual) c.km_actual = k;
-            c.service.ultimo_km = k; 
-            c.historial.unshift({ fecha: f, tipo: 'Service', detalle: `Service a ${k} km` });
-            await guardarEnServidor(); alert("Registrado."); renderDetailView();
+            c.service.ultimo_km = k;
+            c.historial.unshift({ fecha: f, tipo: 'Service', detalle: `Service a ${formatNumber(k)} km` });
+            if(await guardarEnServidor()) { toast("Service registrado"); renderDetailView(); }
         }
 
         async function addCustomExpiration() {
             const name = document.getElementById('new-venc-name').value.trim().toLowerCase().replace(/\s+/g, '_');
             const date = document.getElementById('new-venc-date').value;
-            if(!name || !date) return;
+            if(!name || !date) { toast("Completar nombre y fecha", "error"); return; }
             FLOTA_DATA.find(x => x.id === selectedTruckId).vencimientos[name] = date;
-            await guardarEnServidor(); document.getElementById('new-venc-name').value=''; renderDetailView();
+            if(await guardarEnServidor()) { document.getElementById('new-venc-name').value=''; document.getElementById('new-venc-date').value=''; toast("Vencimiento agregado"); renderDetailView(); }
         }
-        async function deleteExpiration(key) { if(confirm("¿Borrar?")) { delete FLOTA_DATA.find(x => x.id === selectedTruckId).vencimientos[key]; await guardarEnServidor(); renderDetailView(); } }
-        
-        function openHistoryModal(idx=-1) { document.getElementById('modal-history').classList.remove('hidden'); document.getElementById('hist-index').value = idx; }
+
+        async function deleteExpiration(key) { if(confirm("¿Borrar este vencimiento?")) { delete FLOTA_DATA.find(x => x.id === selectedTruckId).vencimientos[key]; if(await guardarEnServidor()) { toast("Vencimiento eliminado"); renderDetailView(); } } }
+
+        function openHistoryModal(idx=-1) {
+            document.getElementById('modal-history').classList.remove('hidden');
+            document.getElementById('hist-index').value = idx;
+            if(idx >= 0) {
+                const h = FLOTA_DATA.find(x => x.id === selectedTruckId).historial[idx];
+                document.getElementById('hist-fecha').value = h.fecha;
+                document.getElementById('hist-tipo').value = h.tipo;
+                document.getElementById('hist-detalle').value = h.detalle;
+            } else {
+                document.getElementById('hist-fecha').value = '';
+                document.getElementById('hist-tipo').value = '';
+                document.getElementById('hist-detalle').value = '';
+            }
+        }
+
         async function handleHistorySubmit(e) {
             e.preventDefault();
             const idx = parseInt(document.getElementById('hist-index').value);
             const item = { fecha: document.getElementById('hist-fecha').value, tipo: document.getElementById('hist-tipo').value, detalle: document.getElementById('hist-detalle').value };
             const h = FLOTA_DATA.find(x => x.id === selectedTruckId).historial;
             if(idx === -1) h.unshift(item); else h[idx] = item;
-            await guardarEnServidor(); closeModal('modal-history'); renderDetailView();
+            if(await guardarEnServidor()) { toast(idx === -1 ? "Evento registrado" : "Evento actualizado"); closeModal('modal-history'); renderDetailView(); }
         }
-        async function deleteHistoryItem(idx) { if(confirm("¿Borrar evento?")) { FLOTA_DATA.find(x => x.id === selectedTruckId).historial.splice(idx,1); await guardarEnServidor(); renderDetailView(); } }
+
+        async function deleteHistoryItem(idx) { if(confirm("¿Borrar este evento?")) { FLOTA_DATA.find(x => x.id === selectedTruckId).historial.splice(idx,1); if(await guardarEnServidor()) { toast("Evento eliminado"); renderDetailView(); } } }
+
         async function handleNewUnit(e) {
             e.preventDefault();
             const max = FLOTA_DATA.length ? Math.max(...FLOTA_DATA.map(c=>c.id)) : 0;
             FLOTA_DATA.push({ id: max+1, patente: document.getElementById('new-patente').value.toUpperCase(), descripcion: document.getElementById('new-descripcion').value, km_actual: parseInt(document.getElementById('new-km').value), service: {ultimo_km:0, intervalo_km:10000}, vencimientos: {}, historial: [] });
-            await guardarEnServidor(); closeModal('modal-new-unit'); showDashboard();
+            if(await guardarEnServidor()) { toast("Unidad creada"); closeModal('modal-new-unit'); showDashboard(); }
         }
+
         async function saveConfig() {
             CONFIG.diasAviso = parseInt(document.getElementById('config-dias').value);
             CONFIG.emailAlertas = document.getElementById('config-email').value;
-            await fetch('/api/guardar_config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(CONFIG)});
-            alert("Configuración guardada.");
+            const res = await fetch('/api/guardar_config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(CONFIG)});
+            if(res.ok) toast("Configuración guardada"); else toast("Error al guardar", "error");
         }
-        async function deleteTruck() { if(confirm("¿Eliminar unidad?")) { FLOTA_DATA = FLOTA_DATA.filter(c => c.id !== selectedTruckId); await guardarEnServidor(); showDashboard(); } }
-        
-        function openNewUnitModal() { 
-            document.getElementById('modal-new-unit').classList.remove('hidden'); 
+
+        async function deleteTruck() { if(confirm("¿Eliminar esta unidad? Esta acción no se puede deshacer.")) { FLOTA_DATA = FLOTA_DATA.filter(c => c.id !== selectedTruckId); if(await guardarEnServidor()) { toast("Unidad eliminada"); showDashboard(); } } }
+
+        function openNewUnitModal() {
+            document.getElementById('modal-new-unit').classList.remove('hidden');
             document.getElementById('form-new-truck').reset();
         }
     </script>
