@@ -176,6 +176,39 @@ def api_get_config():
         c = {"diasAviso": 30, "emailAlertas": "datos@semilleroelmanantial.com"}
     return jsonify(c)
 
+@app.route('/api/cleanup', methods=['POST'])
+@login_required
+@admin_required
+def api_cleanup():
+    """Elimina camiones que no estén en la lista de patentes válidas"""
+    body = request.json
+    patentes_validas = [p.strip().upper() for p in body.get('patentes', [])]
+    if not patentes_validas:
+        return jsonify({"status": "error", "message": "Enviar lista de patentes válidas"}), 400
+    flota = cargar_json(DATA_FILE)
+    antes = len(flota)
+    flota = [c for c in flota if c.get('patente', '').upper() in patentes_validas]
+    despues = len(flota)
+    guardar_json(DATA_FILE, flota)
+    eliminados = antes - despues
+    log_audit(session.get('usuario_actual', '?'), "cleanup", f"Limpieza: {eliminados} unidades eliminadas, {despues} conservadas")
+    return jsonify({"status": "success", "eliminados": eliminados, "conservados": despues})
+
+@app.route('/api/toggle_activo/<int:truck_id>', methods=['POST'])
+@login_required
+@admin_required
+def api_toggle_activo(truck_id):
+    """Activa/desactiva un camión (no genera alertas si está inactivo)"""
+    flota = cargar_json(DATA_FILE)
+    truck = next((c for c in flota if c.get('id') == truck_id), None)
+    if not truck:
+        return jsonify({"status": "error", "message": "Unidad no encontrada"}), 404
+    truck['activo'] = not truck.get('activo', True)
+    guardar_json(DATA_FILE, flota)
+    estado = "activada" if truck['activo'] else "desactivada"
+    log_audit(session.get('usuario_actual', '?'), "toggle_activo", f"{truck.get('patente','')} {estado}")
+    return jsonify({"status": "success", "activo": truck['activo']})
+
 @app.route('/api/guardar_config', methods=['POST'])
 @login_required
 @admin_required

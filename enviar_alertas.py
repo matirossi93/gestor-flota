@@ -87,8 +87,11 @@ def generar_reporte_alertas(dias_aviso):
     lista = cargar_datos()
     if not lista: return None
     alertas_gral = []
-    
+
     for c in lista:
+        # Saltar camiones dados de baja
+        if not c.get('activo', True):
+            continue
         alertas_c = []
         patente = c.get('patente', 'Unidad')
         

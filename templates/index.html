@@ -240,6 +240,10 @@
                             </div>
                         </div>
                     </div>
+                    <div class="admin-only border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 flex justify-between items-center">
+                        <div><span id="toggle-activo-label" class="text-amber-700 dark:text-amber-400 text-sm font-medium">Estado de la unidad</span><p class="text-[10px] text-gray-400 mt-0.5">Las unidades inactivas no generan alertas por email</p></div>
+                        <button id="btn-toggle-activo" onclick="toggleActivo()" class="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors"></button>
+                    </div>
                     <div class="admin-only border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-2xl p-4 flex justify-between items-center">
                         <span class="text-red-700 dark:text-red-400 text-sm font-medium">Eliminar unidad</span>
                         <button onclick="deleteTruck()" class="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i> Eliminar</button>
@@ -430,7 +434,7 @@
         // --- NOTIFICATION BELL ---
         function updateAlertCount() {
             let count = 0;
-            FLOTA_DATA.forEach(c => { if (checkService(c).st === 'DANGER') count++; Object.values(c.vencimientos).forEach(v => { if(v && checkDate(v).st === 'DANGER') count++; }); });
+            FLOTA_DATA.filter(c => c.activo !== false).forEach(c => { if (checkService(c).st === 'DANGER') count++; Object.values(c.vencimientos).forEach(v => { if(v && checkDate(v).st === 'DANGER') count++; }); });
             ['sidebar-alert-badge', 'mobile-alert-badge'].forEach(id => {
                 const el = document.getElementById(id);
                 if (count > 0) { el.classList.remove('hidden'); el.textContent = count > 99 ? '99+' : count; }
@@ -448,7 +452,7 @@
         function renderNotifications() {
             const list = document.getElementById('notification-list');
             let items = [];
-            FLOTA_DATA.forEach(c => {
+            FLOTA_DATA.filter(c => c.activo !== false).forEach(c => {
                 const sv = checkService(c);
                 if (sv.st === 'DANGER' || sv.st === 'WARNING') items.push({ truckId: c.id, patente: c.patente, tipo: 'Service', msg: sv.msg, st: sv.st });
                 Object.entries(c.vencimientos).forEach(([k,v]) => { if(!v) return; const st = checkDate(v); if (st.st === 'DANGER' || st.st === 'WARNING') items.push({ truckId: c.id, patente: c.patente, tipo: k.replace(/_/g,' '), msg: st.msg, st: st.st }); });
@@ -483,11 +487,13 @@
                 Object.entries(c.vencimientos).forEach(([k,v]) => { if(!v) return; const st = checkDate(v); let label = k.replace('filtro_comanry', 'F. Comanry').replace(/_/g,' '); vHtml += `<div class="venc-row flex justify-between items-center py-1.5 px-2 rounded-lg text-xs"><span class="text-gray-500 dark:text-gray-400 capitalize truncate mr-2">${label}</span><span class="px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap ${badgeCls(st.st)}">${st.msg}</span></div>`; });
                 const sv = checkService(c);
                 const ws = getWorstState(c);
-                const borderColor = ws === 'DANGER' ? 'border-l-red-500' : ws === 'WARNING' ? 'border-l-amber-400' : 'border-l-green-400';
+                const isActivo = c.activo !== false;
+                const borderColor = !isActivo ? 'border-l-gray-300' : ws === 'DANGER' ? 'border-l-red-500' : ws === 'WARNING' ? 'border-l-amber-400' : 'border-l-green-400';
                 const card = document.createElement('div');
-                card.className = `truck-card bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 ${borderColor} overflow-hidden cursor-pointer`;
+                card.className = `truck-card bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 ${borderColor} overflow-hidden cursor-pointer ${!isActivo ? 'opacity-50' : ''}`;
                 card.onclick = () => showDetail(c.id);
-                card.innerHTML = `<div class="p-5"><div class="flex justify-between items-start mb-3"><div><h3 class="font-extrabold text-gray-900 dark:text-white text-lg tracking-tight">${c.patente}</h3><p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">${c.descripcion}</p></div><span class="text-[10px] px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-400 font-mono">#${c.id}</span></div><div class="flex items-center justify-between mb-3 bg-gray-50 dark:bg-gray-700 rounded-xl px-3 py-2"><div class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-gray-400"></i><span class="text-xs text-gray-500 dark:text-gray-400">KM</span></div><span class="font-mono font-bold text-lg text-gray-900 dark:text-white">${formatNumber(c.km_actual)}</span></div><div class="flex items-center justify-between mb-3"><span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1"><i data-lucide="wrench" class="w-3 h-3"></i>Service</span><span class="px-2.5 py-1 rounded-lg text-xs font-bold ${badgeCls(sv.st)}">${sv.msg}</span></div>${vHtml ? `<div class="border-t border-gray-100 dark:border-gray-700 pt-2 mt-2 space-y-0.5">${vHtml}</div>` : ''}</div><div class="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 px-5 py-2.5 text-center"><span class="text-xs font-bold text-brand-green dark:text-green-400 flex items-center justify-center gap-1">Ver detalles <i data-lucide="arrow-right" class="w-3 h-3"></i></span></div>`;
+                const inactivoBadge = !isActivo ? '<span class="text-[10px] px-2 py-0.5 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-bold">INACTIVO</span>' : '';
+                card.innerHTML = `<div class="p-5"><div class="flex justify-between items-start mb-3"><div><h3 class="font-extrabold text-gray-900 dark:text-white text-lg tracking-tight">${c.patente} ${inactivoBadge}</h3><p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">${c.descripcion}</p></div><span class="text-[10px] px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-400 font-mono">#${c.id}</span></div><div class="flex items-center justify-between mb-3 bg-gray-50 dark:bg-gray-700 rounded-xl px-3 py-2"><div class="flex items-center gap-2"><i data-lucide="gauge" class="w-4 h-4 text-gray-400"></i><span class="text-xs text-gray-500 dark:text-gray-400">KM</span></div><span class="font-mono font-bold text-lg text-gray-900 dark:text-white">${formatNumber(c.km_actual)}</span></div><div class="flex items-center justify-between mb-3"><span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1"><i data-lucide="wrench" class="w-3 h-3"></i>Service</span><span class="px-2.5 py-1 rounded-lg text-xs font-bold ${badgeCls(sv.st)}">${sv.msg}</span></div>${vHtml ? `<div class="border-t border-gray-100 dark:border-gray-700 pt-2 mt-2 space-y-0.5">${vHtml}</div>` : ''}</div><div class="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 px-5 py-2.5 text-center"><span class="text-xs font-bold text-brand-green dark:text-green-400 flex items-center justify-center gap-1">Ver detalles <i data-lucide="arrow-right" class="w-3 h-3"></i></span></div>`;
                 grid.appendChild(card);
             });
             lucide.createIcons();
@@ -518,6 +524,18 @@
             const ss = checkService(c);
             document.getElementById('status-km-label').innerText = ss.msg;
             document.getElementById('status-km-label').className = txtCls(ss.st) + ' text-sm';
+            // Toggle activo/inactivo
+            const isActivo = c.activo !== false;
+            const btnToggle = document.getElementById('btn-toggle-activo');
+            if (btnToggle) {
+                if (isActivo) {
+                    btnToggle.className = 'bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors';
+                    btnToggle.innerHTML = '<i data-lucide="pause-circle" class="w-4 h-4"></i> Dar de baja';
+                } else {
+                    btnToggle.className = 'bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors';
+                    btnToggle.innerHTML = '<i data-lucide="play-circle" class="w-4 h-4"></i> Reactivar';
+                }
+            }
             applyPermissions(); lucide.createIcons();
         }
 
@@ -574,7 +592,7 @@
             e.preventDefault();
             const max = FLOTA_DATA.length ? Math.max(...FLOTA_DATA.map(c=>c.id)) : 0;
             const patente = document.getElementById('new-patente').value.toUpperCase();
-            FLOTA_DATA.push({ id: max+1, patente, descripcion: document.getElementById('new-descripcion').value, km_actual: parseInt(document.getElementById('new-km').value), service: {ultimo_km:0, intervalo_km:10000}, vencimientos: {}, historial: [] });
+            FLOTA_DATA.push({ id: max+1, patente, descripcion: document.getElementById('new-descripcion').value, km_actual: parseInt(document.getElementById('new-km').value), service: {ultimo_km:0, intervalo_km:10000}, vencimientos: {}, historial: [], activo: true });
             if(await guardarEnServidor('create_truck', patente)) { toast("Unidad creada"); closeModal('modal-new-unit'); showDashboard(); }
         }
         async function saveConfig() {
@@ -582,6 +600,18 @@
             CONFIG.emailAlertas = document.getElementById('config-email').value;
             const res = await fetch('/api/guardar_config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(CONFIG)});
             if(res.ok) toast("Configuración guardada"); else toast("Error", "error");
+        }
+        async function toggleActivo() {
+            try {
+                const res = await fetch(`/api/toggle_activo/${selectedTruckId}`, { method: 'POST', headers: {'Content-Type':'application/json'} });
+                if(res.ok) {
+                    const data = await res.json();
+                    const c = FLOTA_DATA.find(x => x.id === selectedTruckId);
+                    c.activo = data.activo;
+                    toast(data.activo ? "Unidad activada" : "Unidad dada de baja");
+                    renderDetailView();
+                } else { toast("Error", "error"); }
+            } catch(e) { toast("Error de conexión", "error"); }
         }
         async function deleteTruck() { if(confirm("¿Eliminar esta unidad?")) { const c = FLOTA_DATA.find(x => x.id === selectedTruckId); FLOTA_DATA = FLOTA_DATA.filter(x => x.id !== selectedTruckId); if(await guardarEnServidor('delete_truck', c.patente)) { toast("Unidad eliminada"); showDashboard(); } } }
         function openNewUnitModal() { document.getElementById('modal-new-unit').classList.remove('hidden'); document.getElementById('form-new-truck').reset(); }
