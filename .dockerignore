@@ -1,0 +1,5 @@
+data/*.json
+.git
+__pycache__
+*.pyc
+.env

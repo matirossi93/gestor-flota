@@ -88,9 +88,16 @@ def generar_reporte_alertas(dias_aviso):
     if not lista: return None
     alertas_gral = []
 
+    # Patentes reales de la flota — ignorar cualquier dato de ejemplo
+    PATENTES_VALIDAS = {"KAJ995", "NSQ932", "AE681TR", "AE681RY"}
+
     for c in lista:
         # Saltar camiones dados de baja
         if not c.get('activo', True):
+            continue
+        # Saltar camiones que no son de la flota real
+        if c.get('patente', '').upper() not in PATENTES_VALIDAS:
+            print(f"  IGNORADO (no es flota real): {c.get('patente', '?')}")
             continue
         alertas_c = []
         patente = c.get('patente', 'Unidad')

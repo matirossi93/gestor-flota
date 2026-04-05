@@ -127,17 +127,22 @@ def logout():
     return redirect(url_for('login'))
 
 # --- SCHEDULER ---
+# Solo iniciar en el worker principal de gunicorn (evita emails duplicados)
 def iniciar_programador():
     try:
         s = BackgroundScheduler()
         if hasattr(enviar_alertas, 'tarea_diaria'):
-            s.add_job(enviar_alertas.tarea_diaria, 'cron', hour=8, minute=0)
+            s.add_job(enviar_alertas.tarea_diaria, 'cron', hour=8, minute=0, id='alerta_diaria', replace_existing=True)
         if hasattr(enviar_alertas, 'enviar_copia_seguridad'):
-            s.add_job(enviar_alertas.enviar_copia_seguridad, 'cron', day_of_week='fri', hour=9, minute=0)
+            s.add_job(enviar_alertas.enviar_copia_seguridad, 'cron', day_of_week='fri', hour=9, minute=0, id='backup_semanal', replace_existing=True)
         s.start()
     except:
         pass
-iniciar_programador()
+
+# Solo iniciar scheduler si es el proceso principal (no en workers forkeados de gunicorn)
+import multiprocessing
+if os.environ.get('SCHEDULER_ENABLED', 'true') == 'true':
+    iniciar_programador()
 
 # --- RUTAS ---
 @app.route('/')
