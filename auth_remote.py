@@ -81,3 +81,36 @@ def validar(email, password):
     else:
         return None  # no habilitado para flota
     return {"username": row.get("email", email), "role": role}
+
+
+def diagnostico():
+    """Diagnóstico de la conexión a Supabase. NO expone claves ni hashes —
+    solo si la app ve las variables y qué responde la query. Temporal."""
+    info = {
+        "supabase_on": SUPABASE_ON,
+        "url_set": bool(SUPABASE_URL),
+        "url_host": (SUPABASE_URL.split("://")[-1].split("/")[0] if SUPABASE_URL else None),
+        "key_set": bool(SUPABASE_SERVICE_KEY),
+        "key_len": len(SUPABASE_SERVICE_KEY),
+        "tenant_id": TENANT_ID,
+        "has_bcrypt": _HAS_BCRYPT,
+    }
+    if not SUPABASE_ON:
+        info["resultado"] = "SUPABASE_ON=false: la app NO está viendo SUPABASE_URL y/o SUPABASE_SERVICE_KEY"
+        return info
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/usuarios",
+            params={"select": "email,puede_flota", "limit": "1"},
+            headers={
+                "apikey": SUPABASE_SERVICE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+                "Accept": "application/json",
+            },
+            timeout=10,
+        )
+        info["query_status"] = r.status_code
+        info["resultado"] = "OK: Supabase responde bien" if r.status_code == 200 else r.text[:200]
+    except Exception as e:
+        info["query_error"] = str(e)[:200]
+    return info
