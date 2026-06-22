@@ -141,11 +141,6 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-@app.route('/healthz/auth')
-def healthz_auth():
-    # Diagnóstico TEMPORAL de la conexión a Supabase (no expone claves). Quitar luego.
-    return jsonify(auth_remote.diagnostico())
-
 # --- SCHEDULER ---
 # Solo iniciar en el worker principal de gunicorn (evita emails duplicados)
 def iniciar_programador():
