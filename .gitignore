@@ -1,4 +1,8 @@
 .env
 __pycache__/
 *.pyc
+# Datos operativos y credenciales: NO versionar (users.json tiene hashes de claves).
 data/config.json
+data/users.json
+data/flota_data.json
+data/audit_log.json

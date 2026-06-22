@@ -8,9 +8,17 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 import enviar_alertas
+import auth_remote
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'cambiar-en-produccion')
+# Fail-loud: sin secret la cookie de sesión es forjable. Antes había un default
+# público ('cambiar-en-produccion') que permitía entrar como admin sin la clave.
+_secret = os.environ.get('FLASK_SECRET_KEY')
+if not _secret or len(_secret) < 16:
+    raise RuntimeError(
+        "FATAL: FLASK_SECRET_KEY no configurado o demasiado corto (mínimo 16 chars, recomendado 32+)."
+    )
+app.secret_key = _secret
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "data", "flota_data.json")
@@ -61,17 +69,17 @@ def cargar_usuarios():
                 return json.load(f)
         except:
             pass
-    # Migration: create users.json from env vars on first run
+    # Bootstrap en primer arranque: SOLO admin, con password OBLIGATORIO por env.
+    # Antes se creaban admin/admin123 e invitado/invitado por defecto → cualquiera
+    # con el repo sabía las claves. Sin ADMIN_PASSWORD no se crea ningún usuario.
+    admin_pass = os.environ.get('ADMIN_PASSWORD')
+    if not admin_pass:
+        return []
     users = [
         {
             "username": "admin",
-            "password_hash": generate_password_hash(os.environ.get('ADMIN_PASSWORD', 'admin123')),
+            "password_hash": generate_password_hash(admin_pass),
             "role": "admin"
-        },
-        {
-            "username": "invitado",
-            "password_hash": generate_password_hash(os.environ.get('GUEST_PASSWORD', 'invitado')),
-            "role": "lector"
         }
     ]
     guardar_json(USERS_FILE, users)
@@ -109,14 +117,21 @@ def login():
     if request.method == 'POST':
         user = request.form['username']
         pwd = request.form['password']
+        # 1) Tabla `usuarios` compartida de Semillero (estándar del ecosistema).
+        remoto = auth_remote.validar(user, pwd)
+        if remoto:
+            session['usuario_actual'] = remoto['username']
+            session['rol_usuario'] = remoto['role']
+            log_audit(remoto['username'], "login", "Inicio de sesión (Supabase)")
+            return redirect(url_for('dashboard'))
+        # 2) Fallback: store local users.json (transición / standalone sin Supabase).
         u = buscar_usuario(user)
         if u and check_password_hash(u['password_hash'], pwd):
             session['usuario_actual'] = user
             session['rol_usuario'] = u['role']
-            log_audit(user, "login", "Inicio de sesión")
+            log_audit(user, "login", "Inicio de sesión (local)")
             return redirect(url_for('dashboard'))
-        else:
-            error = 'Usuario o contraseña incorrectos'
+        error = 'Usuario o contraseña incorrectos'
     return render_template('login.html', error=error)
 
 @app.route('/logout')

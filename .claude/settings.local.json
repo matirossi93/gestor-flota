@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python3 -m pip install flask apscheduler)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python3 -m pip install python-dotenv)",
+      "Bash(python3 -c \"import os; f=os.path.join\\(os.path.dirname\\(os.path.abspath\\(''app.py''\\)\\), ''data'', ''flota_data.json''\\); print\\(f\\); print\\(os.path.exists\\(f\\)\\)\")",
+      "Bash(python3 -c \":*)",
+      "Bash(python3 -c \"import json; data=json.load\\(open\\(''data/flota_data.json'',''r'',encoding=''utf-8''\\)\\); print\\(f''{len\\(data\\)} camiones cargados OK''\\)\")",
+      "Bash(xxd requirements.txt)",
+      "Bash(printf blinker==1.9.0nclick==8.3.0ncolorama==0.4.6nFlask==3.1.2nitsdangerous==2.2.0nJinja2==3.1.6nMarkupSafe==3.0.3nWerkzeug==3.1.3ngunicornnAPSchedulernpython-dotenvn)"
+    ]
+  }
+}
