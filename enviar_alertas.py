@@ -49,7 +49,7 @@ def obtener_destinatarios(config):
 
 def es_momento_de_avisar(fecha_str, dias_config):
     """Retorna True solo si es un día clave para molestar al usuario"""
-    if not fecha_str: return False
+    if not fecha_str: return False, ""
     try:
         venc = datetime.datetime.strptime(fecha_str, "%Y-%m-%d").date()
         hoy = datetime.date.today()
@@ -75,11 +75,16 @@ def es_momento_de_avisar(fecha_str, dias_config):
 def verificar_service(camion):
     try:
         actual = camion.get("km_actual", 0)
-        prox = camion["service"]["ultimo_km"] + camion["service"]["intervalo_km"]
+        intervalo = camion["service"]["intervalo_km"]
+        prox = camion["service"]["ultimo_km"] + intervalo
         diff = prox - actual
-        
-        if diff < 0: return True, f"VENCIDO (hace {abs(diff)} km)"
-        if diff <= 1000: return True, f"URGENTE (falta {diff} km)" # Solo avisa si falta poco
+        # Unidad segun el medidor: horas para maquinas (apilador, autoelevador), km para camiones
+        unidad = "hs" if camion.get("tipo_medidor") == "horas" else "km"
+        # Avisar cuando falta ~10% del intervalo (1000 km en un service de 10000; 50 hs en uno de 500)
+        umbral = max(int(intervalo * 0.1 + 0.5), 1)
+
+        if diff < 0: return True, f"VENCIDO (hace {abs(diff)} {unidad})"
+        if diff <= umbral: return True, f"URGENTE (falta {diff} {unidad})" # Solo avisa si falta poco
         return False, ""
     except: return False, ""
 
@@ -92,11 +97,13 @@ def generar_reporte_alertas(dias_aviso):
     PATENTES_VALIDAS = {"KAJ995", "NSQ932", "AE681TR", "AE681RY"}
 
     for c in lista:
-        # Saltar camiones dados de baja
+        # Saltar unidades dadas de baja
         if not c.get('activo', True):
             continue
-        # Saltar camiones que no son de la flota real
-        if c.get('patente', '').upper() not in PATENTES_VALIDAS:
+        # Las maquinas (medidor por horas) no tienen patente: se filtran solo por 'activo'.
+        # Los camiones siguen con la lista blanca para ignorar cualquier camion de ejemplo.
+        es_maquina = c.get('tipo_medidor') == 'horas'
+        if not es_maquina and c.get('patente', '').upper() not in PATENTES_VALIDAS:
             print(f"  IGNORADO (no es flota real): {c.get('patente', '?')}")
             continue
         alertas_c = []
